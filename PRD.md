@@ -648,7 +648,7 @@ compact update
 | Concern | Severity | How the PRD addresses it |
 |---|---|---|
 | Compact contract must compile | [C] | Section 4.1 specifies the exact contract; it compiles today with 3 circuits and 6 keys. R1 + DT-1 guard regression. |
-| Repo gate (topic label, Apache-2.0, README, deck, video) | [C] | Section 7.6 enumerates artifacts; R2 and R4 cover the two easiest to forget; SUBMISSION-CHECKLIST.md is the mechanical list. |
+| Repo gate (topic label, Apache-2.0, README, deck, video) | [C] | Section 7.6 enumerates the artifacts; R2 and R4 cover the two easiest to forget. |
 | Hard deadline | [C] | Section 8 schedules against it and defines the 13:00 UTC safety line. R3 + DT-3. |
 | Demo must run without Docker | [C] | Section 9 states Docker is explicitly not required; Section 4.2 simulator runs in-process. R5 + DT-5. |
 | Trust assumption stated plainly | [C] | Section 1 and the roadmap state it; R6 + DT-6 make hiding it a tracked risk. |

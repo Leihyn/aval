@@ -259,7 +259,7 @@ Add to `README.md` `## What is NOT built`:
 
 ### Task 2b.4: De-cluster the positioning  [E-5, approved]
 
-A blind peer re-derivation given only `research/research-brief.md` and `PRD.md` scored
+A blind peer re-derivation given only `PRD.md` and `ARCHITECTURE.md` scored
 this positioning **similar**, not differentiated: the construction (attested Merkle leaf
 plus threshold predicate plus nullifier) is what 23 of the 59 entries are building, and
 the demo's own closing line said so out loud.
@@ -616,13 +616,13 @@ Alice cannot prove without the preimage. This fails closed: no funds move, nothi
 
 ### Task 8.3: Submit
 
-Work `SUBMISSION-CHECKLIST.md` top to bottom. Submit with more than 60 minutes to spare.
+Work the gate list in PRD Section 7.6 top to bottom. Submit with more than 60 minutes to spare.
 
 Commit: `submission: proof artifacts and links`
 
 ### Phase 8 gate
 
-- [ ] Every item in SUBMISSION-CHECKLIST.md checked
+- [ ] Every gate item in PRD Section 7.6 checked
 - [ ] Clean-clone test run passes
 - [ ] Every URL opened in a private window
 - [ ] Submitted before 14:00 UTC

@@ -72,7 +72,6 @@ aval/
 ├── PLAN.md                            # implementation plan
 ├── LICENSE                            # Apache-2.0
 ├── concerns.md
-├── SUBMISSION-CHECKLIST.md
 ├── contract/
 │   ├── package.json
 │   ├── src/
