@@ -24,11 +24,12 @@ echo
 for f in "$ROOT/README.md" "$ROOT/PRD.md" "$ROOT/ARCHITECTURE.md" "$ROOT/submission/proof.md" "$ROOT/submission/wave1-progress.md"; do
   [ -f "$f" ] || continue
   base=$(basename "$f")
-  bad=$(grep -oE "[0-9]+ passed \([0-9]+\)" "$f" | grep -v "^$TESTS passed ($TESTS)$" | head -1)
+  # ignore the guard's own sample output and any quoted historical example
+  bad=$(grep -v 'ACTUAL:' "$f" | sed 's/"[^"]*"//g' | grep -oE "[0-9]+ passed \([0-9]+\)" | grep -v "^$TESTS passed ($TESTS)$" | head -1)
   if [ -n "$bad" ]; then printf "  FAIL  %-30s test-count: %s\n" "$base" "$bad"; fail=1; fi
-  bad=$(grep -oE "[0-9]+ passing tests" "$f" | grep -v "^$TESTS passing tests$" | head -1)
+  bad=$(grep -v 'ACTUAL:' "$f" | grep -oE "[0-9]+ passing tests" | grep -v "^$TESTS passing tests$" | head -1)
   if [ -n "$bad" ]; then printf "  FAIL  %-30s passing: %s\n" "$base" "$bad"; fail=1; fi
-  bad=$(grep -oE "[0-9]+ circuits" "$f" | grep -v "^$CIRCUITS circuits$" | head -1)
+  bad=$(grep -v 'ACTUAL:' "$f" | grep -oE "(^|[^=0-9])[0-9]+ circuits" | grep -oE "[0-9]+ circuits" | grep -v "^$CIRCUITS circuits$" | head -1)
   if [ -n "$bad" ]; then printf "  FAIL  %-30s circuits: %s\n" "$base" "$bad"; fail=1; fi
   bad=$(grep -oE "[0-9]+ explicit .disclose" "$f" | grep -v "^$DISCLOSE explicit .disclose$" | head -1)
   if [ -n "$bad" ]; then printf "  FAIL  %-30s disclose: %s\n" "$base" "$bad"; fail=1; fi
