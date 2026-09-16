@@ -61,13 +61,22 @@ Aval
 
 ---
 
-## Tagline  *(required, 100 words or less)*
+## Tagline  *(required, 100 CHARACTERS or less)*
 
-Already filled and good. For reference:
+The limit is 100 **characters**, not words. The long form used everywhere else
+is 110 characters and will not fit, so the trailing clause is dropped: "act now"
+already implies it.
 
 ```
-Prove money is committed but not yet arrived, so a counterparty can act now instead of waiting for settlement.
+Prove money is committed but not yet arrived, so a counterparty can act now.
 ```
+
+76 characters. Alternatives, if you want a different emphasis:
+
+| Chars | Tagline |
+|---:|---|
+| 81 | `Prove money is committed but not yet arrived. The amount never reaches the chain.` |
+| 76 | `Prove funds are committed but not yet arrived, without revealing the amount.` |
 
 ---
 
