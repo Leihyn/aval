@@ -1,5 +1,68 @@
 @import "tailwindcss";
 
+/* ───────────────────────────────────────────────────────────────────────────
+   Aval design tokens.
+   Institutional finance meets cryptography: restrained, precise, dense.
+   Two semantic accents encode the product argument itself —
+   SIGNAL (emerald) is what the counterparty learns,
+   LEDGER (sky) is what the public chain learns.
+   ─────────────────────────────────────────────────────────────────────────── */
+@theme {
+  /* surfaces, near-black with a blue cast for "Midnight" */
+  --color-base-950: #05060a;
+  --color-base-900: #0a0b12;
+  --color-base-850: #0e1018;
+  --color-base-800: #141723;
+  --color-base-700: #1e2130;
+  --color-base-600: #2a2e40;
+
+  /* text */
+  --color-ink-100: #eceef5;
+  --color-ink-300: #a8adc0;
+  --color-ink-500: #6b7189;
+
+  /* semantic accents */
+  --color-signal-400: #34d399;   /* counterparty knowledge */
+  --color-signal-900: #06281d;
+  --color-ledger-400: #56b6f0;   /* public chain knowledge */
+  --color-ledger-900: #062033;
+  --color-warn-400:   #f0b356;
+  --color-danger-400: #f2607a;
+  --color-danger-900: #2a0d15;
+
+  /* exactly two radii */
+  --radius-card: 14px;
+  --radius-control: 8px;
+
+  --font-mono: ui-monospace, "SF Mono", SFMono-Regular, Menlo, monospace;
+}
+
 :root { color-scheme: dark; }
-body { margin: 0; background: #07070b; color: #e8e8ef;
-  font-family: ui-sans-serif, system-ui, -apple-system, sans-serif; }
+
+html { -webkit-text-size-adjust: 100%; }
+
+body {
+  margin: 0;
+  background: var(--color-base-950);
+  color: var(--color-ink-100);
+  font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  font-feature-settings: "cv01", "ss01";
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Visible focus for keyboard users on every interactive element. */
+:where(button, input, a, [tabindex]):focus-visible {
+  outline: 2px solid var(--color-signal-400);
+  outline-offset: 2px;
+  border-radius: var(--radius-control);
+}
+
+/* Tabular figures everywhere numbers are compared side by side. */
+.tnum { font-variant-numeric: tabular-nums; }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}

@@ -51,3 +51,32 @@ export async function prove(sim: AvalSimulator, required: bigint) {
     time: NOW,
   });
 }
+
+/**
+ * Bootstrap a FRESH contract whose single attested lock holds `amount`, then
+ * prove it against `required`. Used by the indistinguishability control: the
+ * viewer flips the amount and watches the public ledger fail to change.
+ *
+ * Additive. `bootstrap` and `prove` above are untouched.
+ */
+export async function runWithAmount(amount: bigint, required: bigint) {
+  const sim = await AvalSimulator.create(ATTESTOR_KEY);
+  await sim.registerAttestor(ATTESTOR_KEY, NOW);
+  const lock: LockRecord = {
+    lockId: bytes32('eth-lock-8837'),
+    amount,
+    salt: bytes32('salt-8837'),
+  };
+  await sim.registerAttestation(ATTESTOR_KEY, leafFor(lock, BOB, EXPIRY), NOW);
+  let ok = true;
+  let error: string | null = null;
+  try {
+    await sim.proveFundsInFlight({
+      secretKey: ALICE_KEY, lock, required, counterparty: BOB, expiry: EXPIRY, time: NOW,
+    });
+  } catch (e) {
+    ok = false;
+    error = (e instanceof Error ? e.message : String(e)).replace(/^.*failed assert: /, '').split('\n')[0];
+  }
+  return { ledger: readLedger(sim), ok, error, amount };
+}
