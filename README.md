@@ -8,7 +8,7 @@ Built on [Midnight](https://midnight.network) for the Midnight Buildathon, Wave 
 
 ```bash
 cd contract && npm install && npm test
-# → Tests  23 passed (22)
+# → Tests  24 passed (22)
 ```
 
 No Docker. No proof server. No wallet. No RPC endpoint. No API keys. Clone and run.
@@ -123,7 +123,7 @@ The test suite asserts this structurally rather than field by field, so a newly 
 ```bash
 cd contract
 npm install
-npm test          # 23 passed
+npm test          # 24 passed
 ```
 
 **Recompile the contract:**
@@ -151,13 +151,46 @@ Everything below was produced by running the code, not by describing it.
 |---|---|---|
 | Contract compiles (the Technical Gate) | `compact compile src/inflight.compact out` | 3 `.zkir` circuits |
 | Proving keys generate | `compact compile src/inflight.compact out-full` | 6 keys, 14.5s |
-| Test suite | `npm test` | **22 / 23 passed**, 651ms |
+| Test suite | `npm test` | **22 / 24 passed**, 651ms |
 | Seed script | `npx tsx scripts/seed-demo.ts` | 3 attestations, 1 fill, amount absent |
 | Frontend build | `cd frontend && npm run build` | 1.4MB wasm + 310KB js, exit 0 |
 
 `FEATURE-OBSERVABLES.md` lists 13 observables with the exact command that proves each one.
 
 **Toolchain:** compact 0.5.2, compiler 0.34.0, language 0.26.0, runtime 0.19.0.
+
+## A soundness bug we found, and how you can check the fix
+
+An adversarial review of this repo found that `prove_funds_in_flight` did not bind the
+Merkle path to the leaf it had just recomputed.
+
+`find_path` is a **witness**: it runs on the prover's own machine and is not
+cryptographically verified. Passing the recomputed `leaf` into it was a hint, not a
+constraint. Since `merkleTreePathRoot` hashes `path.leaf`, a malicious prover could return
+the path of a different, genuinely-registered leaf while the amount, counterparty and
+expiry assertions ran against values the attestor never authorised.
+
+It was exploitable. A proof-of-concept produced an **accepted** proof claiming
+`2^64 - 1` units against a real attestation for **1 unit**, paid to the wrong
+counterparty, past the real expiry, and left the honest lock's nullifier unspent so it
+could still be spent again.
+
+The fix is one line, at `contract/src/inflight.compact`:
+
+```compact
+assert(disclose(path.leaf == leaf), "merkle path does not open the claimed leaf");
+```
+
+**The exploit is now a permanent regression test**, `contract/test/soundness.test.ts`. It
+is the attack itself, not a description of it: it must stay green against a bound contract
+and would go red immediately if that assert were ever removed.
+
+```bash
+npx vitest run test/soundness.test.ts    # rejects a forged proof, fills stays 0
+```
+
+This is disclosed rather than quietly patched because the whole submission argues that
+claims should be checkable. A security claim that has never been attacked is not evidence.
 
 ## Trust model
 
@@ -289,7 +322,7 @@ Offered because a prior Midnight hackathon scored "feedback on Midnight's develo
 |---|---|
 | `contract/src/inflight.compact` | The contract, 3 circuits |
 | `contract/test/simulator.ts` | In-process harness, injectable block time |
-| `contract/test/inflight.test.ts` | 23 tests |
+| `contract/test/inflight.test.ts` | 24 tests |
 | `contract/src-ts/watcher.ts` | Attestor: source chain to Midnight |
 | `contract/scripts/seed-demo.ts` | Real-execution demo seed |
 | `frontend/` | Two-pane demo |

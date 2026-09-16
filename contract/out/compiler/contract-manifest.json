@@ -20,21 +20,21 @@
     },
     "index.js": {
       "type": "file",
-      "size": 77366,
-      "hash": "84b57a592d0289d3151c25d45994fa449804fcdaa867ee36eae0599630363ff9"
+      "size": 77607,
+      "hash": "7995df54b5c3bf0fc879737fd007a530aabfd3d15feb07395f425ca42d074644"
     },
     "index.js.map": {
       "type": "file",
-      "size": 3285,
-      "hash": "1ab8e765b093e73678b0a52684488de7f16adbe79920c6f77340ee2ccc0c7a03"
+      "size": 3311,
+      "hash": "cd9bdc2e354bbb5ea18154e11941658658f9dfe49e135fc02694af7b7faf5549"
     }
   },
   "zkir": {
     "type": "directory",
     "prove_funds_in_flight.zkir": {
       "type": "file",
-      "size": 10961,
-      "hash": "aa48cbca0b3a860351a4094979a78fc641a8dca034d6fa5b50b17c245b6addc6"
+      "size": 11145,
+      "hash": "a50908ce65c9f5dde71b0a2be094b8f67172121c09b17c4260290a44850242ad"
     },
     "register_attestation.zkir": {
       "type": "file",

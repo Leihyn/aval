@@ -127,6 +127,19 @@ export circuit prove_funds_in_flight(
   const leaf = leaf_hash(lock_id, amount, counterparty, expiry, salt);
   const path = find_path(leaf);
 
+  // BIND THE PATH TO THE LEAF. This line is the difference between a sound
+  // contract and a forgeable one.
+  //
+  // find_path is a WITNESS: it runs on the prover's own machine and is not
+  // cryptographically verified. Passing `leaf` into it is a hint, not a
+  // constraint. merkleTreePathRoot hashes path.leaf, so without this assert a
+  // malicious prover returns the path of some OTHER genuinely-registered leaf
+  // while the circuit's amount, counterparty and expiry checks run against
+  // values the attestor never authorised. Verified by exploit: a proof claiming
+  // 2^64-1 units to the wrong counterparty, past expiry, was ACCEPTED against a
+  // real 1-unit attestation, and left the honest lock's nullifier unspent.
+  assert(disclose(path.leaf == leaf), "merkle path does not open the claimed leaf");
+
   // DISCLOSE (root), publishes the Merkle ROOT computed from the private path, not
   // the path and not the leaf. The root is already public ledger state, so this
   // reveals nothing new. Critically it does NOT reveal WHICH leaf was used, so the

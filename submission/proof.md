@@ -34,7 +34,7 @@ Three circuits, six proving and verifier keys. Full source in `captures/compile.
 ```
 $ npm test
 Test Files  1 passed (1)
-     Tests  23 passed (22)
+     Tests  24 passed (22)
   Duration  1.26s
 ```
 

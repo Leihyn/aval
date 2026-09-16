@@ -159,15 +159,15 @@ Copy `contract/test/inflight.test.ts` from **ARCHITECTURE.md Section 6**.
 npx vitest run
 ```
 
-Expected: `Tests  23 passed (22)`
+Expected: `Tests  24 passed (22)`
 
-Commit: `test: 23 passing simulator tests covering access control, nullifiers, binding, expiry, privacy`
+Commit: `test: 24 passing simulator tests covering access control, nullifiers, binding, expiry, privacy`
 
 ### Phase 2 gate
 
 - [x] Runtime loads
 - [x] Simulator constructs a contract and reads public ledger state
-- [x] 23 tests pass
+- [x] 24 tests pass
 - [x] Privacy group asserts the amount is absent from a full public-state dump
 - [x] No Docker, no proof server, no wallet required
 

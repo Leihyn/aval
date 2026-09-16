@@ -1,5 +1,10 @@
 $ npm test
  RUN  v2.1.9 /Users/machine/Desktop/dev/aval/contract
+stdout | test/soundness.test.ts > soundness: the merkle path must open the leaf the circuit recomputed > rejects a forged proof that reuses a real attestation path for different terms
+  forged proof accepted        : false
+  fills after forgery          : 0
+  real lock nullifier spent?   : false
+ ✓ test/soundness.test.ts > soundness: the merkle path must open the leaf the circuit recomputed > rejects a forged proof that reuses a real attestation path for different terms
  ✓ test/inflight.test.ts > attestor registration > starts with no attestor and an empty ledger
  ✓ test/inflight.test.ts > attestor registration > registers an attestor exactly once
  ✓ test/inflight.test.ts > attestor registration > never writes the attestor secret key to the public ledger
@@ -18,11 +23,12 @@ $ npm test
  ✓ test/inflight.test.ts > binding, an attestation is not transferable > rejects a prover who extends their own expiry
  ✓ test/inflight.test.ts > expiry, enforced by ledger block time > accepts a proof before expiry
  ✓ test/inflight.test.ts > expiry, enforced by ledger block time > rejects a proof after expiry
- ✓ test/inflight.test.ts > privacy, what the public ledger does and does not reveal > never exposes the locked amount anywhere in public state
- ✓ test/inflight.test.ts > privacy, what the public ledger does and does not reveal > never exposes the private lock id
- ✓ test/inflight.test.ts > privacy, what the public ledger does and does not reveal > publishes a nullifier that is unlinkable to the registered leaf
- ✓ test/inflight.test.ts > privacy, what the public ledger does and does not reveal > reveals only an aggregate fill count, not per-proof amounts
- Test Files  1 passed (1)
-      Tests  22 passed (22)
-   Start at  05:27:39
-   Duration  1.26s (transform 162ms, setup 0ms, collect 216ms, tests 671ms, environment 0ms, prepare 76ms)
+ ✓ test/inflight.test.ts > privacy, indistinguishability of the amount > produces IDENTICAL public state for amounts 100x apart, except the merkle root
+ ✓ test/inflight.test.ts > privacy, indistinguishability of the amount > holds the indistinguishability across three decades of amount
+ ✓ test/inflight.test.ts > privacy, indistinguishability of the amount > never writes the decimal amount into any public field
+ ✓ test/inflight.test.ts > privacy, indistinguishability of the amount > never exposes the private lock id or salt in public state
+ ✓ test/inflight.test.ts > privacy, indistinguishability of the amount > publishes a nullifier that is not the registered leaf
+ Test Files  2 passed (2)
+      Tests  24 passed (24)
+   Start at  07:46:34
+   Duration  1.47s (transform 137ms, setup 0ms, collect 272ms, tests 886ms, environment 0ms, prepare 218ms)

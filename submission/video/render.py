@@ -148,12 +148,12 @@ footer(d); add(img, 10)
 
 # 6 tests (REAL)
 img, d = new_frame()
-d.text((80, 70), '22 tests, all passing', font=F_H1, fill=FG)
+d.text((80, 70), '24 tests, all passing', font=F_H1, fill=FG)
 d.text((80, 150), 'No Docker. No proof server. No wallet. Clone and run.', font=F_SMALL, fill=DIM)
 lines = read_capture('tests.txt')
 term_panel(d, 80, 205, 1760, 700, lines[:24], 'real output', GREEN,
            highlight={'22 passed': GREEN, '✓': GREEN})
-d.text((80, 940), 'Tests  22 passed (22)', font=f(MONO, 34), fill=GREEN)
+d.text((80, 940), 'Tests  24 passed (24)', font=f(MONO, 34), fill=GREEN)
 footer(d); add(img, 13)
 
 # 7 seed / privacy (REAL)
@@ -230,6 +230,27 @@ for tag, name, pred, col in rows:
     d.text((760, yy + 70), pred, font=F_MONO, fill=col)
     yy += 150
 footer(d); add(img, 10)
+
+# 10b soundness: we attacked our own contract
+img, d = new_frame()
+d.text((80, 70), 'We attacked our own contract', font=F_H1, fill=FG)
+d.text((80, 150), 'An adversarial review found the merkle path was never bound to the recomputed leaf.',
+       font=F_SMALL, fill=DIM)
+d.rounded_rectangle([80, 205, 1840, 345], radius=12, fill=(30, 12, 16), outline=ROSE, width=2)
+d.text((112, 232), 'Before the fix: a proof claiming 2^64-1 units against a real 1-unit',
+       font=F_H2, fill=ROSE)
+d.text((112, 286), 'attestation, to the wrong payee, past expiry, was ACCEPTED.', font=F_H2, fill=ROSE)
+d.text((80, 388), 'find_path is a WITNESS. It runs on the prover\'s machine and is not verified.',
+       font=F_BODY, fill=DIM)
+d.text((80, 432), 'Passing the leaf into it was a hint, not a constraint. The fix is one line:',
+       font=F_BODY, fill=DIM)
+term_panel(d, 80, 486, 1760, 130,
+           ['assert(disclose(path.leaf == leaf), "merkle path does not open the claimed leaf");'],
+           'contract/src/inflight.compact', GREEN)
+term_panel(d, 80, 640, 1760, 200, read_capture('soundness.txt')[2:7],
+           'the exploit is now a permanent regression test', GREEN,
+           highlight={'false': GREEN, '0': GREEN})
+footer(d); add(img, 16)
 
 # 11 close
 img, d = new_frame()

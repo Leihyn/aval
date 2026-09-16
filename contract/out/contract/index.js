@@ -691,6 +691,8 @@ export class Contract {
                                      expiry_0,
                                      salt_0);
     const path_0 = this._find_path_0(context, partialProofData, leaf_0);
+    __compactRuntime.assert(this._equal_1(path_0.leaf, leaf_0),
+                            'merkle path does not open the claimed leaf');
     const root_0 = this._merkleTreePathRoot_0(path_0);
     __compactRuntime.assert(_descriptor_0.fromValue(__compactRuntime.queryLedgerState(context,
                                                                                       partialProofData,
@@ -791,6 +793,10 @@ export class Contract {
     return x;
   }
   _equal_0(x0, y0) {
+    if (!x0.every((x, i) => y0[i] === x)) { return false; }
+    return true;
+  }
+  _equal_1(x0, y0) {
     if (!x0.every((x, i) => y0[i] === x)) { return false; }
     return true;
   }

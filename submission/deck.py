@@ -168,6 +168,22 @@ d.text((80,800),'Buyers: cross-chain treasury desks, OTC, bridge-integrated lend
 d.text((80,845),'Midnight\'s own 2026 priorities name "institutional execution" and "programmable compliance".',font=BODY,fill=SKY)
 foot(d,9); slides.append(img)
 
+# 9b soundness
+img,d=new()
+d.text((80,70),'We attacked our own contract',font=H1,fill=FG)
+d.text((80,150),'An adversarial review found the merkle path was never bound to the recomputed leaf.',font=SMALL,fill=DIM)
+d.rounded_rectangle([80,200,1840,330],radius=12,fill=(30,12,16),outline=ROSE,width=2)
+d.text((112,226),'Before the fix: a proof claiming 2^64-1 units against a real 1-unit',font=H2,fill=ROSE)
+d.text((112,276),'attestation, to the wrong payee, past expiry, was ACCEPTED.',font=H2,fill=ROSE)
+wrap(d,"find_path is a WITNESS: it runs on the prover's machine and is not verified. Passing the leaf into it was a hint, not a constraint.",BODY,80,368,1760,DIM)
+pnl(d,80,450,1760,110,'the fix, one line',GREEN)
+d.text((110,505),'assert(disclose(path.leaf == leaf), "merkle path does not open the claimed leaf");',font=MS,fill=FG)
+pnl(d,80,585,1760,200,'the exploit is now a permanent regression test',GREEN)
+for i,l in enumerate(cap('soundness.txt')[3:6]):
+    d.text((110,645+i*34),l.strip(),font=MS,fill=GREEN)
+d.text((80,815),'Disclosed rather than quietly patched. A security claim that has never been attacked is not evidence.',font=SMALL,fill=DIM)
+foot(d,10); slides.append(img)
+
 # 10 close
 img,d=new()
 d.text((80,330),'Aval',font=T,fill=FG)

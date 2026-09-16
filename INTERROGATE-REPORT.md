@@ -1,38 +1,59 @@
 # INTERROGATE REPORT — Aval
 
-**Date:** 2026-09-16 (started 05:43Z, 9h 16m before the 15:00Z Wave 1 deadline)
+**Date:** 2026-09-16. Audit ran 05:43Z–06:46Z; the 15:00Z Wave 1 deadline was 8h 14m away at close.
 **Mode:** DEEP (bespoke dispatch — see *Lens inventory* below)
 **Purpose:** prepare the builder for the live interview the Official Rules reserve the right to call, and surface anything that would embarrass them in it.
-**Scope note:** read-only. Nothing under `frontend/` was touched; another agent is editing it concurrently. No source or doc file was modified by this phase.
+**Scope note:** read-only. This phase modified no source or doc file. The repo was being edited concurrently throughout — `frontend/`, `submission/`, and `contract/src/` all changed under this audit. Every finding carries the timestamp of its verification.
 
 ---
 
 ## The one thing to read first
 
-`prove_funds_in_flight` never checks that the Merkle path it proves against is a path
-for the leaf it just computed. I wrote a proof-of-concept and it produced an **accepted
-proof** claiming `amount = 2^64-1` against a real attestation for 1 unit, paid to the
-**wrong counterparty**, **41,000 time units past the real expiry**, leaving the real
-lock's nullifier **unspent** so the honest holder can still spend it too.
+**It was found, and it was fixed, inside this phase. Verify it is still in before you submit.**
 
-That single omission falsifies two of the three headline differentiators, all three
+`prove_funds_in_flight` did not check that the Merkle path it proved against was a path for
+the leaf it had just computed. `find_path` is a **witness** — it runs on the prover's own
+machine and is not cryptographically verified, so passing `leaf` into it is a hint, not a
+constraint. `merkleTreePathRoot` hashes `path.leaf`, and nothing tied the two together.
+
+I wrote a proof-of-concept against the real compiled contract. It produced an **accepted
+proof** claiming `amount = 2^64-1` against a real attestation for 1 unit, paid to the
+**wrong counterparty**, **41,000 time units past the real expiry**, leaving the honest
+lock's nullifier **unspent** so that attestation could back a second proof as well.
+
+That single omission falsified two of the three headline differentiators, all three
 "binding" tests, three of the six attack-demo reverts, four rows of the README security
 table, and both `FEATURE-OBSERVABLES` rows F-007 and F-008.
 
-**Midnight's own teaching repo fixed the identical bug in its own example contracts on
-2026-09-05, eleven days before this deadline** — `midnightntwrk/midnight-expert` PR #239,
-"Bind the Merkle path's leaf to the caller's commitment in two examples" (verified live
-against the GitHub API: merged `2026-09-05T13:19:36Z`). Its PR body contains the same
-analysis, arrived at independently here.
+**Why it mattered so much for this specific audience:** Midnight's own teaching repo merged
+`midnightntwrk/midnight-expert` PR #239, *"Bind the Merkle path's leaf to the caller's
+commitment in two examples,"* on **2026-09-05** — eleven days before this deadline (verified
+live against the GitHub API: merged `2026-09-05T13:19:36Z`). Its PR body contains the same
+analysis, reached independently here. And both of Aval's nearest-construction competitors in
+this same wave already do it right: `OoJae/onepledge` asserts `lenderPath.leaf == lender`
+(`registry.compact:176`) and `notePath.leaf == note` (`:199`); `ceciliagalvaoo/Attesta`
+asserts `path.leaf == commitment` twice (`attesta.compact:251`, `:333`).
 
-**Both of Aval's nearest competitors in this same wave already do it right.** `OoJae/onepledge`
-asserts `lenderPath.leaf == lender` (`registry.compact:176`) and `notePath.leaf == note`
-(`:199`). `ceciliagalvaoo/Attesta` asserts `path.leaf == commitment` twice
-(`attesta.compact:251`, `:333`) and ships a comment block explaining why.
+**Status at 06:45Z: RESOLVED and verified against live artifacts.**
+`contract/src/inflight.compact:141` now carries
+`assert(disclose(path.leaf == leaf), "merkle path does not open the claimed leaf");`
+Both the ledger-9 and ledger-8 builds were recompiled (06:44Z / 06:45Z), the two sources
+still differ by exactly the one `pragma` line, and a genuine adversarial-witness regression
+test landed at `contract/test/soundness.test.ts`. Re-running my exploit against the current
+`out/`:
 
-The fix is one line. I applied it in a scratchpad copy and verified all three outcomes:
-it **compiles** (3 circuits), it **blocks the forged proof**, and the **honest proof still
-passes**. See F-01.
+```
+ATTACK forged proof -> rejected: failed assert: merkle path does not open the claimed leaf
+fills 0n -> 0n     spent 0n -> 0n
+```
+
+Suite is now **24 passed (24)** across 2 files.
+
+**What that leaves.** The engineering hole is closed. What is still open is that **every
+artifact in the submission now states a test count that is wrong** — the deck and the video
+say 22, the README's Verification table says `22 / 24 passed`, the suite says 24 — and
+`submission/proof.md` still opens
+with "Nothing is retyped" above a number no run has ever printed. See F-03, F-04, F-05.
 
 ---
 
@@ -69,7 +90,7 @@ Everything below was executed, not read.
 
 | # | What was verified | Evidence |
 |---|---|---|
-| 1 | Test suite really passes, 23/23 | `npx vitest run` → `Tests  23 passed (23)`, 1.48s |
+| 1 | Test suite really passes, 24/24 | `npx vitest run` → `Tests  24 passed (24)`, 2 files, 1.44s (verified 06:46Z) |
 | 2 | Contract compiles, the Technical Gate | `compact compile src/inflight.compact` → `Compiling 3 circuits:`, 3 `.zkir` |
 | 3 | Proving keys really generate | fresh compile → 6 keys (3 `.prover`, 3 `.verifier`) + 3 `.bzkir`, 11.8s |
 | 4 | Committed artifacts match the published source | all 3 committed `out/zkir/*.zkir` are **byte-identical** to a fresh compile; the only `index.js` delta is `expectedVk` (empty in the keyless build). Judges running `npm test` are testing `src/inflight.compact`. |
@@ -79,9 +100,13 @@ Everything below was executed, not read.
 | 8 | Salt has real entropy | `contract/src-ts/watcher.ts:12` uses `crypto.getRandomValues(new Uint8Array(32))` |
 | 9 | Indistinguishability is genuinely sound | `scripts/indistinguishability.ts` reproduces; the property is independent of F-01; the nullifier is byte-identical across a 100× amount difference because `nullifier_of` touches only `lock_id` and `salt` |
 | 10 | Registry access control is real | `assert(disclose(id == attestor))` at `inflight.compact:105` genuinely gates writes; PoC confirms a non-attestor is rejected |
-| 11 | Expiry reads real ledger block time | `kernel.blockTimeLessThan` — not a caller-supplied timestamp. (The *mechanism* is real; F-01 lets a forger choose the value it is compared against.) |
+| 11 | Expiry reads real ledger block time | `kernel.blockTimeLessThan` — not a caller-supplied timestamp. Sound now that F-01 is fixed; before the fix a forger could choose the value it was compared against. |
 | 12 | `disclose()` discipline is real | six annotated call sites; Compact's information-flow analysis is genuinely load-bearing |
 | 13 | Capture files `attacks.txt` and `indistinguishability.txt` match their live scripts | re-ran both; output matches |
+| 14 | **The frontend really does run in a real browser** — pipeline item D-4 is settled, positive | headless Chromium via Playwright 1.63 against `vite preview`: WASM instantiates, boot reaches `ready`, `fills` goes to 1 on prove, **zero console errors**. Repro: `cd frontend && npx vite preview --port 4173 &` then `node verify-browser.mjs` |
+| 15 | The frontend is not a mock | `demo.ts` imports `@contract/test/simulator`, which imports the compiled `../out/contract/index.js`. Zero hardcoded ledger JSON, zero mock/fixture/stub hits across `frontend/src` |
+| 16 | Frontend builds clean and is browser-safe | `npm run build` exit 0 twice, no warnings; built bundle has zero `node:` builtin imports and zero `require(` |
+| 17 | The privacy pane's leak detector genuinely fires | proven by deliberate injection + real-browser run, not by assertion — and the injection exposed and fixed a real white-screen crash before being reverted (`proof.md:129-147`) |
 
 ---
 
@@ -94,10 +119,10 @@ Effort: **E1** <15 min · **E2** 15-60 min · **E3** 1-4h · **E4** 4h+.
 
 ---
 
-#### F-01 · The Merkle path is never bound to the recomputed leaf — total soundness break
+#### F-01 · The Merkle path was never bound to the recomputed leaf — total soundness break · **FIXED 06:45Z**
 
-**Location:** `contract/src/inflight.compact:127-135`
-**Effort:** E1 (one line, verified) · **Demo:** BLOCKS · **Submission:** BLOCKS
+**Location:** `contract/src/inflight.compact:127-135` (fix now at `:141`)
+**Effort:** E1 (one line) · **Demo:** was BLOCKS · **Submission:** was BLOCKS · **Status: RESOLVED, re-verified against live artifacts**
 
 ```compact
 const leaf = leaf_hash(lock_id, amount, counterparty, expiry, salt);   // L127
@@ -151,19 +176,28 @@ can back a second proof.
 
 The three CONTROL rows are exactly what the shipped tests and `attack-demo.ts` assert. They
 pass **only** because `contract/test/simulator.ts:41-45` implements `find_path` honestly.
-Every one of the 23 tests uses that single honest witness. No test overrides it. So 23/23
-green says nothing about this property.
+At the time of discovery every one of the 23 tests used that single honest witness and none
+overrode it, so 23/23 green said nothing about this property. `contract/test/soundness.test.ts`
+(added 06:45Z) is now the test that does: it swaps in a hostile `find_path` and asserts the
+forged proof is rejected, no fill is recorded, and the honest lock's nullifier stays unspent.
 
-**Verified fix** — insert after line 128:
+**The fix, now shipped** at `contract/src/inflight.compact:141`:
 
 ```compact
-assert(path.leaf == leaf, "witness returned a path for a different leaf");
+assert(disclose(path.leaf == leaf), "merkle path does not open the claimed leaf");
 ```
 
-I applied this to a scratchpad copy and ran all three checks:
-- `compact compile` → `Compiling 3 circuits:` (compiles clean)
-- forged proof → `rejected: failed assert: witness returned a path for a different leaf`
-- honest proof → `ACCEPTED` (no regression)
+I first verified an equivalent one-liner in a scratchpad copy (compiles, blocks the forgery,
+honest path unaffected). A concurrent agent then landed the shipped version. Re-verified by me
+at 06:45Z against the **live** `contract/out/`:
+
+- compiled output contains the assert; `out/` and `out-ledger8/` both regenerated (06:44Z/06:45Z)
+- `src-ledger8/inflight.compact` still differs from `src/` by exactly the one `pragma` line
+- my exploit → `rejected: failed assert: merkle path does not open the claimed leaf`, `fills 0n -> 0n`, `spent 0n -> 0n`
+- `npx vitest run` → `Tests  24 passed (24)` — a real adversarial-witness regression test now exists at `contract/test/soundness.test.ts`, which swaps in a hostile `find_path` and asserts rejection, no fill, and the honest nullifier left unspent
+
+**Before submitting, re-run those two commands.** This landed an hour before the deadline in a
+repo three agents were editing.
 
 **Why this is worse than a normal bug for this specific audience:** Midnight's own
 `midnight-expert` repo merged PR #239 on 2026-09-05 fixing the identical class in
@@ -172,7 +206,9 @@ literally this assertion. And both of Aval's nearest-construction competitors in
 wave (`OoJae/onepledge`, `ceciliagalvaoo/Attesta`) already have it. A Midnight Foundation
 engineer comparing entries in this cluster will find it in minutes.
 
-**Claims falsified by F-01** (fix the code, or fix every one of these):
+**Claims that were falsified while F-01 was open** — all of these are TRUE again now that the
+binding is in. Listed because they are exactly what a judge will probe, and because if the fix
+is ever reverted, every one of them goes false at once:
 
 | File:line | Claim |
 |---|---|
@@ -196,7 +232,8 @@ engineer comparing entries in this cluster will find it in minutes.
 #### F-02 · `attack-demo.ts` claims the circuit blocks attacks the test harness blocks
 
 **Location:** `contract/scripts/attack-demo.ts:59`
-**Effort:** E1 · **Demo:** BLOCKS · **Submission:** BLOCKS
+**Effort:** E2 · **Demo:** WARNS · **Submission:** WARNS
+*(Downgraded from P0 now that F-01 is fixed: the property is genuinely enforced, the demo just still does not demonstrate it.)*
 
 The script prints, verbatim:
 
@@ -214,6 +251,13 @@ string in the demo output will not find it.
 
 README, `submission/proof.md`, and the paste-ready submission comment all point judges at
 this script.
+
+**Now that F-01 is fixed this is cheap to make true, and worth doing.** Give `attack-demo.ts`
+the hostile `find_path` from `test/soundness.test.ts` for those three cases. The output then
+reads `BLOCKED: merkle path does not open the claimed leaf` — a real circuit assert — and the
+demo starts demonstrating the strongest thing in the contract instead of the weakest thing in
+the harness. Alternatively add a seventh row for the forged-path attack and keep the other six
+labelled honestly.
 
 ---
 
@@ -244,53 +288,95 @@ This is the single most embarrassing catchable item after F-01, because it is
 self-inflicted and takes 60 seconds to find: the document called *proof* contains a number
 that was provably retyped, and retyped wrong.
 
+**Two further contradictions inside the same file, both added after this audit began**
+(`proof.md` was revised at ~06:40Z while this report was being written — the new browser-
+verification section is genuinely good work and resolves D-4, see *Verified solid* #14):
+
+- `proof.md:87` still says *"In-browser interactive behaviour of the frontend was verified as
+  far as build and HTTP 200 serving. **It was not driven through a real browser session.**"*
+  while `proof.md:114-127` is a new section titled *"Verified in a real browser (headless
+  Chromium)"*. Both are in the same document. Delete line 87.
+- `proof.md:56` still says *"Four tests assert this against a **full serialisation** of the
+  ledger"* and `:112` repeats *"comparing the full public surface structurally so a future
+  leaking field fails the test"* — the F-08 overclaim, restated twice.
+
 ---
 
 ### P1 — critical
 
 ---
 
-#### F-04 · README states that a test fails
+#### F-04 · The test-count propagation has now failed three times in a row, and the README says two tests fail
 
-**Location:** `README.md:154`, `README.md:11`, `ARCHITECTURE.md:114`, `ARCHITECTURE.md:355-368`, `PLAN.md:162`
 **Effort:** E1 · **Demo:** WARNS · **Submission:** WARNS
+**State as of 06:46Z.** Actual: `npx vitest run` → `Tests  24 passed (24)`, 2 files.
 
-`README.md:154`:
+**Root cause, and it is one line.** Every sweep replaces the leading number and never the one
+in parentheses, because `PLAN.md:162` seeds the malformed string as the canonical expected
+output and each sweep re-reads it:
+
 ```
-| Test suite | `npm test` | **22 / 23 passed**, 651ms |
+PLAN.md:162   Expected: `Tests  24 passed (22)`
 ```
-That reads, in the Verification table, as *one test is failing*. It is not — the suite is
-23/23. `README.md:11` carries the same impossible `23 passed (22)` string as proof.md, above
-the fold, as the README's headline proof-of-life. `ARCHITECTURE.md:114` still says "22 security
-+ privacy tests", and `ARCHITECTURE.md:359-368` describes a test-group table that sums to 22
-and names a privacy group ("privacy, what the ledger does and does not reveal", 4 tests) that
-no longer exists — the current group is "privacy, indistinguishability of the amount", 5 tests.
 
-`PLAN.md:208-212` contains the project's own procedure for preventing exactly this:
-*"In the SAME commit, update every occurrence of `22`… A stale count is a verifiability
-defect in a submission whose entire pitch is verifiability."* Commit `1189a14` attempted it
-and produced two malformed strings while leaving `captures/tests.txt`, `ARCHITECTURE.md`, and
-the rendered video behind.
+It has produced `23 passed (22)` (22→23 sweep), then `24 passed (22)` (23→24 sweep). Fix
+`PLAN.md:162` or the next sweep makes it a fourth time.
 
-Correct as-is and should not be touched: `README.md:126`, `README.md:292`, the test file itself.
+**Exactly six lines are still wrong.** Everything else in the repo now correctly says 24.
+
+| File:line | Current | Should be |
+|---|---|---|
+| `README.md:11` | `# → Tests  24 passed (22)` | `# → Tests  24 passed (24)` |
+| `README.md:154` | `**22 / 24 passed**, 651ms` | `**24 / 24 passed**` (and drop the 651ms — no run has printed it) |
+| `submission/proof.md:37` | `     Tests  24 passed (22)` | paste the real line |
+| `ARCHITECTURE.md:114` | "22 security + privacy tests" | 24 |
+| `PLAN.md:162` | `Expected: Tests  24 passed (22)` | the real string |
+| `submission/deck.py` + `video/render.py` | 22 in six places | see F-05 |
+
+`README.md:154` is the worst of them: in the *Verification* table, `22 / 24 passed` reads as
+**two tests failing**. It is the row a judge checking your claims looks at first.
+
+`PLAN.md:208-212` contains the project's own procedure for preventing exactly this —
+*"In the SAME commit, update every occurrence… A stale count is a verifiability defect in a
+submission whose entire pitch is verifiability."* — and `PLAN.md:285` leaves its checkbox
+unticked. The procedure exists. It has not been executed to completion once.
+
+Good news since this audit opened: `submission/captures/tests.txt` **was** regenerated and
+now correctly reads `Tests  24 passed (24)`.
 
 ---
 
-#### F-05 · The rendered demo video says 22, and narrates three properties the circuit does not enforce
+#### F-05 · The deck and the video both say 22, and both narrate three properties the circuit does not enforce
 
-**Location:** `submission/video/render.py:151,153,156,231` → `submission/video/aval-demo.mp4`
-**Effort:** E3 (re-render) or E1 (disclose in README) · **Demo:** BLOCKS · **Submission:** WARNS
+**Location:** `submission/video/render.py:151,153,155,156,239`; `submission/deck.py:94,176`
+**Effort:** E2 (regenerate capture + 6 string literals + re-run two scripts) · **Demo:** BLOCKS · **Submission:** WARNS
 
 ```python
+# submission/video/render.py
 151  d.text((80, 70), '22 tests, all passing', font=F_H1, fill=FG)
-153  lines = read_capture('tests.txt')          # <- the STALE 22-test capture
+153  lines = read_capture('tests.txt')          # <- reads the STALE 22-test capture
 156  d.text((80, 940), 'Tests  22 passed (22)', font=f(MONO, 34), fill=GREEN)
-231  d.text((80, 700), 'Apache-2.0  ·  22 passing tests  ·  3 circuits  ·  no Docker required', ...)
+239  d.text((80, 700), 'Apache-2.0  ·  22 passing tests  ·  3 circuits  ·  no Docker required', ...)
+
+# submission/deck.py
+94   d.text((1020,275),'Tests  22 passed (22)',font=F(MONO,34),fill=GREEN)
+176  'Apache-2.0  ·  3 circuits  ·  6 proving keys  ·  22 passing tests'
 ```
 
-The video renders the stale capture file directly on screen. A judge watching the video sees
-**22**, opens the README and sees **22 / 23 passed** (implying a failure), then runs the suite
-and gets **23**. Three numbers, three artifacts, 15% of the score is Quality Assurance.
+Both pipelines render `submission/captures/tests.txt` — the stale 05:27Z capture — directly
+onto the screen as pixels. `pdftotext` extracts **zero text** from the deck: every slide is a
+rasterized PNG, so the number cannot be patched, only re-rendered.
+
+**This got worse during the audit, not better.** Both artifacts were re-rendered at 06:41Z
+(deck grew from 10 to 11 pages, video from 127s to 141s) and the 22 was carried straight
+through. The pipeline was re-run with the fix available and the fix was not applied.
+
+A judge watching the video sees **22**, opens the README and sees **22 / 24 passed**
+(implying two failures), then runs the suite and gets **24**. Three numbers, three artifacts,
+and Quality Assurance is 15% of the score.
+
+**Fix:** regenerate `submission/captures/tests.txt` from a real run, change the six string
+literals above, re-run `deck.py` and `render.py`. Everything else in the pipeline already works.
 
 Worse, Scene 5's narration (`PRD.md:502`) is: *"Inflate the amount: the leaf no longer matches.
 Point it at a different counterparty: same. Extend your own expiry: same."* All three are
@@ -392,28 +478,37 @@ the project has already been caught once. Either enumerate reflectively
 
 ---
 
-#### F-09 · The frontend's "leaked" indicator is a check that cannot fail
+#### F-09 · The frontend's "leaked" indicator checks less than its own copy claims
 
-**Location:** `frontend/src/App.tsx:41, 227-231, 429-431`; `frontend/src/lib/demo.ts:11-17, 24-27`
+**Location:** `frontend/src/App.tsx` (`PRIVATE_INPUTS`, the `leaked` filter, and the pane copy);
+`frontend/src/lib/demo.ts:22-28`
 **Effort:** E2 · **Demo:** WARNS · **Submission:** WARNS
-**(Read-only finding — frontend is owned by a concurrent agent; do not let this phase's report
-race that work.)**
+**(Read-only finding. `frontend/` is owned by a concurrent agent and moved three times during
+this audit — re-check against HEAD before acting.)**
 
-`PRIVATE_INPUTS = ['amount','lock_id','salt','merkle_path','prover_identity']`, and `leaked`
-is `PRIVATE_INPUTS.filter(f => Object.hasOwn(view, f))` where `view` is `readLedger()`'s
-fixed-shape `LedgerView` (`attestor_registered`, `attestor_id`, `merkle_root`, `nullifiers`,
-`fills`). That shape can never contain a key named `amount`. The filter is structurally
-always empty.
+*Downgraded from the initial reading.* The detector is **not** vacuous: the concurrent agent
+empirically injected an `amount` field into `readLedger`, drove the page in real headless
+Chromium, and the pane rendered `Privacy claim failed / The ledger object exposes: amount`.
+That injection surfaced and fixed a genuine crash (an undeclared ledger key made
+`FIELD[k].label` throw at three call sites, white-screening React instead of showing the
+banner) and was then reverted — verified clean at 06:41Z. That is good adversarial work and
+it is now written up in `proof.md:129-147`.
 
-The UI then tells the viewer: *"This list is re-checked against the live ledger object on
-every update. If one of these ever appeared on chain, this pane would say so."* It would not.
-It checks key **names** on a hand-authored object, not value **content** against the real
-ledger.
+What remains true:
 
-`demo.ts:24-27` also still truncates each field with `.slice(0, 24) + '…'` and hand-picks
-five fields — pipeline item **D-1**, raised by critique at P0, spec'd in PLAN Task 2b.2, and
-still unshipped. PLAN's own description of the defect: *"the pane would look exactly the same
-if the contract DID write the amount and the renderer simply had no `amount` key."*
+- `leaked` is `PRIVATE_INPUTS.filter(f => Object.hasOwn(view, f))` against `readLedger()`'s
+  curated `LedgerView`, never against `sim.public`. It catches an exact **key-name** match on
+  a field the renderer chose to copy. It cannot catch a leak that lands in `sim.public` and
+  is simply not copied, a leak under a differently-named key, or an amount hidden inside a
+  value past the `.slice(0, 24) + '…'` truncation boundary.
+- The pane copy is broader than the check: *"This list is re-checked against the live ledger
+  object on every update. If one of these ever appeared on chain, this pane would say so."*
+  Only the first clause is true. Change it to "checks that none of these key names appear",
+  or make the check enumerate `sim.public`'s own keys.
+- `demo.ts:22-28` is still a hand-picked five-field projection with `.slice(0, 24)` truncation
+  and a `?? ''` fallback on the root — pipeline item **D-1**, raised by critique at P0, spec'd
+  in PLAN Task 2b.2, still unshipped. PLAN's own words: *"the pane would look exactly the same
+  if the contract DID write the amount and the renderer simply had no `amount` key."*
 
 ---
 
@@ -490,37 +585,61 @@ remains provable until its expiry. Not documented in any judge-facing file.
 
 ---
 
-#### F-14 · Uncommitted and untracked work at T-9h
+#### F-14 · Judge-facing artifacts are unpushed at the time of writing
 
 **Effort:** E1 · **Demo:** WARNS · **Submission:** WARNS
 
-`git status -sb` at 05:43Z:
+At 05:43Z the whole frontend rewrite was uncommitted. By 06:42Z it had been committed and
+pushed — `origin/main:frontend/src/App.tsx` and the local copy are both 557 lines and
+`git diff origin/main -- frontend/` is empty. That risk closed.
+
+The risk moved rather than disappeared. At 06:42Z:
 
 ```
 ## main...origin/main
- M frontend/index.html
- M frontend/src/App.tsx
-?? .design-forge-state.json
-?? DESIGN_SYSTEM.md
-?? brand.json
-?? frontend/public/
+ M submission/aval-deck.pdf      M submission/deck.py
+ M submission/slide-07.png       M submission/slide-08.png
+ M submission/slide-09.png       M submission/slide-10.png
+ M submission/video/aval-demo.mp4  M submission/video/render.py
+?? submission/screenshots/       ?? submission/slide-11.png
+?? submission/video/ui-panes.png
 ```
 
-`origin/main` is what the judge sees. Whatever the concurrent frontend agent is producing is
-not in it yet. `frontend/public/` being untracked is the sharpest one — if `index.html`
-references anything in it, the published build breaks while the local one works.
+The deck, the video, and the new browser screenshots that `proof.md:127` links to are all
+unpushed. **`proof.md` currently points at `submission/screenshots/ui-initial.png` and
+`ui-after-proof.png`, which are untracked** — that link is a 404 for anyone but this machine.
+
+`origin/main` is what the judge sees. Commit and push everything under `submission/` before
+submitting, then re-open the raw links from a logged-out window.
+
+---
+
+#### F-15 · `submission/links.md` misstates the two artifacts it exists to describe
+
+**Location:** `submission/links.md:6-7`
+**Effort:** E1 · **Demo:** NONE · **Submission:** WARNS
+
+| Claim | Reality (measured 06:42Z) |
+|---|---|
+| "Demo video (**112s**, 1080p)" | `ffprobe` → **141.0s**. 1080p/h264 is right. |
+| "Slide deck (**9 slides**, PDF)" | `pdfinfo` → **11 pages**, and 11 `slide-*.png` on disk. |
+
+Both drifted because the deck and video were re-rendered at 06:41Z and `links.md` was not
+touched. Two numbers, ten seconds to fix — but this is the file a judge reads *first*, and
+getting the length of your own video wrong is the cheapest possible credibility loss.
 
 ---
 
 ### P3 — nitpick
 
-- **F-15** · `ARCHITECTURE.md:74` puts `concerns.md` at the repo root in the file tree. The real file is `.pipeline/concerns.md`, and `.pipeline/` is gitignored — a judge cloning the repo finds it at neither location. (`E1`)
-- **F-16** · `ARCHITECTURE.md:79` annotates `out/` as "generated (gitignored)". False — `.gitignore` excludes only `contract/out-full/`; `contract/out/` is tracked (8 files) and has to be, because the tests and the frontend import from it. (`E1`)
-- **F-17** · `ARCHITECTURE.md:781-788` describes `submission/screenshots/two-pane.png` and `tests.png`. Neither exists; `submission/` ships `slide-01.png`…`slide-10.png`. (`E1`)
-- **F-18** · `ARCHITECTURE.md:1-3` calls itself "THE SINGLE SOURCE OF TRUTH. Every file, every line, every config." Given F-04, F-15, F-16 and F-17, it is not. Soften the line or fix the four. (`E1`)
-- **F-19** · `README.md:80-84` security table attributes 4+3+1+2+2+5 = 17 tests, but the "cannot inflate the amount, 1 test" row is one of the 3 already counted in the "not transferable" row. A judge who adds the column gets an overlap. (`E1`)
-- **F-20** · `frontend/package.json` still declares `vite-plugin-top-level-await` as a devDependency while `README.md:283` tells the Midnight team it *"should be omitted"* and `vite.config.ts` correctly does not use it. Dead dependency contradicting the project's own DX feedback. (`E1`)
-- **F-21** · `leaf_hash`'s inner hash (`inflight.compact:70`) has no domain separator, while `nullifier_of` and `derive_id` both do. Not currently exploitable — the field positions differ — but inconsistent, and a future third `Vector<3, Bytes<32>>` hash would make it a real question. (`E1`)
+- **F-16** · `ARCHITECTURE.md:74` puts `concerns.md` at the repo root in the file tree. The real file is `.pipeline/concerns.md`, and `.pipeline/` is gitignored — a judge cloning the repo finds it at neither location. (`E1`)
+- **F-17** · `ARCHITECTURE.md:79` annotates `out/` as "generated (gitignored)". False — `.gitignore` excludes only `contract/out-full/`; `contract/out/` is tracked (8 files) and has to be, because the tests and the frontend import from it. (`E1`)
+- **F-18** · `ARCHITECTURE.md:781-788` describes `submission/screenshots/two-pane.png` and `tests.png`. Neither exists; the new `submission/screenshots/` holds `ui-initial.png` and `ui-after-proof.png` and is untracked (F-14). (`E1`)
+- **F-19** · `ARCHITECTURE.md:1-3` calls itself "THE SINGLE SOURCE OF TRUTH. Every file, every line, every config." Given F-04, F-16, F-17 and F-18, it is not. Soften the line or fix the four. (`E1`)
+- **F-20** · `README.md:80-84` security table attributes 4+3+1+2+2+5 = 17 tests, but the "cannot inflate the amount, 1 test" row is one of the 3 already counted in the "not transferable" row. A judge who adds the column gets an overlap. (`E1`)
+- **F-21** · `frontend/package.json` still declares `vite-plugin-top-level-await` as a devDependency while `README.md:283` tells the Midnight team it *"should be omitted"* and `vite.config.ts` correctly does not use it. Dead dependency contradicting the project's own DX feedback. (`E1`)
+- **F-22** · `leaf_hash`'s inner hash (`inflight.compact:70`) has no domain separator, while `nullifier_of` and `derive_id` both do. Not currently exploitable — the field positions differ — but inconsistent, and a future third `Vector<3, Bytes<32>>` hash would make it a real question. (`E1`)
+- **F-23** · "3 circuits" (README, deck, `App.tsx`) is defensible but ambiguous: `inflight.compact` exports 3 stateful circuits *and* 3 `export pure circuit`s, so a judge grepping `export.*circuit` counts 6. It matches the compiler's own "Compiling 3 circuits:" line, so it is not wrong — just be ready to say "three stateful, three pure helpers" if asked. (`E1`)
 
 ---
 
@@ -530,18 +649,23 @@ references anything in it, the published build breaks while the local one works.
 |---|---|---|---|
 | P0 | 3 | 2 BLOCKS | 3 BLOCKS |
 | P1 | 6 | 1 BLOCKS, 2 WARNS | 6 WARNS |
-| P2 | 5 | 1 WARNS | 4 WARNS |
-| P3 | 7 | — | — |
-| **Total** | **21** | | |
+| P2 | 6 | 1 WARNS | 5 WARNS |
+| P3 | 8 | — | — |
+| **Total** | **23** | **3 BLOCKS, 3 WARNS** | **3 BLOCKS, 11 WARNS** |
 
-**DEMO GATE: BLOCKED.** The rendered video narrates three security properties the circuit
-does not enforce (F-01 + F-05), and displays a test count that contradicts both the README
-and the actual suite.
+**DEMO GATE: HAZARDS** (upgraded from BLOCKED at 06:45Z). The video's Scene 5 narration is
+true again now that F-01 is fixed. What remains is that the deck and the video both display
+**22** while the suite prints **24**, and `links.md` misstates both artifacts (F-05, F-15).
+Nothing will visibly fail on stage; the numbers will simply not match the repo.
 
-**SUBMISSION GATE: BLOCKED.** F-01 is a live soundness break in the circuit that is 40% of
-the score; F-02 and F-03 are falsifiable honesty claims in judge-facing artifacts.
+**SUBMISSION GATE: BLOCKED**, on F-03 alone. `submission/proof.md:3` promises "Nothing is
+retyped" and `:37` prints a string no run has produced, `:41` sums to a different total than
+`:37` claims, and `:87` now contradicts `:114-127` inside the same file. That is a provably
+false statement in the artifact whose entire purpose is verifiability, in a submission whose
+entire pitch is verifiability. It is ten minutes of work.
 
-All three P0s are fixable well inside the remaining window. F-01 is one verified line.
+F-01, the only finding that was a genuine engineering blocker, was **closed during this phase**
+and re-verified against live artifacts at 06:45Z.
 
 ---
 
@@ -803,10 +927,13 @@ Ranked by how fast they'd find it and how much it costs.
 2. **F-03, `proof.md` "nothing is retyped" containing a retyped number.** Sixty seconds. Costs
    credibility across every other claim in the submission, which is expensive precisely because
    the submission's whole pitch is verifiability.
-3. **F-04, README saying 22/23 passed.** Above the fold, first screen. Reads as "one test fails."
-4. **F-05, the video saying 22 while the docs say 23.** First artifact many judges open.
+3. **F-04, README saying `22 / 24 passed`.** In the Verification table. Reads as two tests failing.
+4. **F-05, the deck and the video saying 22 while the suite says 24.** First two artifacts many
+   judges open, and both were re-rendered at 06:41Z with the fix available and not applied.
 5. **F-02, "blocked by the circuit, not by application code."** One grep of the `.compact` for
    the revert string in the demo output.
+5b. **F-15, `links.md` saying the video is 112s when it is 141s and the deck is 9 slides when
+   it is 11.** The first file a judge opens, describing artifacts they are about to watch.
 6. **F-07, the observer table omitting `required` and `counterparty`.** Only caught by someone
    who reads the circuit signature, but that is exactly who is interviewing you — and it is
    caught in the section that claims to be the complete honest accounting.
@@ -839,9 +966,12 @@ Ranked by how fast they'd find it and how much it costs.
    tests share `simulator.ts`'s single honest `find_path`. This is the root cause of F-01
    surviving to submission, and there is no way to answer it except to say so. It is also the
    best thing you can say in Q6.
-2. **"Has anyone loaded your frontend in a browser and clicked prove?"** No. `proof.md:87` says
-   so. Pipeline item D-4 was routed to a livetest phase that never ran — the conductor's
-   `current_phase` is still `stress_test` and `livetest` is `pending`. UX is 15%.
+2. ~~**"Has anyone loaded your frontend in a browser and clicked prove?"**~~ **Answered during
+   this audit — say yes.** Headless Chromium, WASM instantiates, boot reaches `ready`, prove
+   moves `fills` to 1, zero console errors, and the privacy pane's failure mode was tested by
+   deliberate injection. Repro is two commands. The only remaining exposure is that
+   `proof.md:87` still says the opposite of `proof.md:114-127` (F-03) and the screenshots it
+   links are untracked (F-14). Fix those two and this becomes a strength.
 3. **"What is the verified capacity story in a judge-facing document?"** The README never
    mentions capacity at all, and the PRD's only mention is wrong. You have a measured answer
    (F-10) but it lives nowhere a judge will read.

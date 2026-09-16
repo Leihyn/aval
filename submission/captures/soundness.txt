@@ -1,0 +1,11 @@
+$ npx vitest run test/soundness.test.ts
+ RUN  v2.1.9 /Users/machine/Desktop/dev/aval/contract
+stdout | test/soundness.test.ts > soundness: the merkle path must open the leaf the circuit recomputed > rejects a forged proof that reuses a real attestation path for different terms
+  forged proof accepted        : false
+  fills after forgery          : 0
+  real lock nullifier spent?   : false
+ ✓ test/soundness.test.ts (1 test) 77ms
+ Test Files  1 passed (1)
+      Tests  1 passed (1)
+   Start at  07:46:51
+   Duration  731ms (transform 82ms, setup 0ms, collect 117ms, tests 77ms, environment 0ms, prepare 116ms)
