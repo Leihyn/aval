@@ -146,5 +146,73 @@
     "THESIS-4": "PASS",
     "THESIS-5": "PASS"
   },
-  "errors": []
+  "errors": [],
+  "phase_ledger": [
+    {
+      "phase": "phase_0_5",
+      "started_at": "2026-09-16T04:40:00Z",
+      "completed_at": "2026-09-16T04:40:20Z",
+      "evidence": "SKIPPED: no inspirationRepos in warroom state (warroom did not run \u2014 skill absent)"
+    },
+    {
+      "phase": "phase_0",
+      "started_at": "2026-09-16T04:40:20Z",
+      "completed_at": "2026-09-16T04:42:00Z",
+      "evidence": "config.json + concerns.md loaded; stack family = Smart Contracts + Frontend; scope_mode=rush from <1 build day; docs targeted at working-dir root because dispatch-gate checks $wd/PRD.md"
+    },
+    {
+      "phase": "phase_0a",
+      "started_at": "2026-09-16T04:42:00Z",
+      "completed_at": "2026-09-16T04:43:00Z",
+      "evidence": "source=direct; idea elaboration taken from conductor dispatch context (user-selected vertical); feasibility gate PASS \u2014 contract already compiled before forge began"
+    },
+    {
+      "phase": "phase_0b",
+      "started_at": "2026-09-16T04:43:00Z",
+      "completed_at": "2026-09-16T04:58:00Z",
+      "evidence": "Spike run as REAL compilation, not web research: probed stdlib bindings (Secp256k1* UNBOUND, kernel.blockTimeLessThan BOUND), wrote+compiled inflight.compact (3 circuits, 6 keys, 14.5s), built simulator, 22 tests passing"
+    },
+    {
+      "phase": "phase_1",
+      "started_at": "2026-09-16T04:58:00Z",
+      "completed_at": "2026-09-16T05:01:00Z",
+      "evidence": "PRD.md written, 469 lines"
+    },
+    {
+      "phase": "phase_1_5",
+      "started_at": "2026-09-16T05:01:00Z",
+      "completed_at": "2026-09-16T05:02:00Z",
+      "evidence": "PRD quality gate 6/6 PASS after 3 corrections: added Sec4.4 Alice client spec, added R13, recategorised R7 to Scope"
+    },
+    {
+      "phase": "phase_2",
+      "started_at": "2026-09-16T05:02:00Z",
+      "completed_at": "2026-09-16T05:05:00Z",
+      "evidence": "ARCHITECTURE.md written, 895 lines, 13 files with complete code, contract block tagged [VERIFIED]"
+    },
+    {
+      "phase": "phase_2_5",
+      "started_at": "2026-09-16T05:05:00Z",
+      "completed_at": "2026-09-16T05:06:00Z",
+      "evidence": "Architecture quality gate 6/6 PASS: 13 file headers, 16 verification tags, 0 pseudocode, 0 placeholder ellipsis"
+    },
+    {
+      "phase": "phase_3",
+      "started_at": "2026-09-16T05:06:00Z",
+      "completed_at": "2026-09-16T05:08:00Z",
+      "evidence": "PLAN.md written, 483 lines, 22 tasks, 13 decision trees, 8 phases each gated"
+    },
+    {
+      "phase": "phase_3_5",
+      "started_at": "2026-09-16T05:08:00Z",
+      "completed_at": "2026-09-16T05:14:00Z",
+      "evidence": "Plan gate 7/7 PASS. THESIS-1..5 self-assessed PASS. Cross-model peer re-derivation of thesis-2 returned DISAGREE (peer FAIL vs lead PASS) \u2014 peer correctly found PRD Flow 3 omitted Thesis field 4 element 1. Document reconciled, thesis untouched; resolution event emitted; enforce check now ok:true"
+    },
+    {
+      "phase": "phase_4",
+      "started_at": "2026-09-16T05:14:00Z",
+      "completed_at": "2026-09-16T05:17:00Z",
+      "evidence": ".forge-state.json, .env.example, FEATURE-OBSERVABLES.md (13/13 verified), PULSE ### forge section with all 8 required subsections, README.md + Apache-2.0 LICENSE"
+    }
+  ]
 }

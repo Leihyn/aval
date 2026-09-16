@@ -1,4 +1,4 @@
-# concerns.md — Aval (Midnight Buildathon Wave 1)
+# concerns.md: Aval (Midnight Buildathon Wave 1)
 
 [C] Technical gate: at least one Compact contract MUST compile, or the submission is automatically disqualified from judging for this Wave.
 [C] Repo gate: public GitHub repo with the `midnightntwrk` TOPIC label, Apache-2.0 on Midnight code, README, slide deck, demo video. Any missing item is an auto-DQ.

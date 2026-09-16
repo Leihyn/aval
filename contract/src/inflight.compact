@@ -1,12 +1,12 @@
 pragma language_version >= 0.26;
 
-// Aval — proof of funds in flight.
+// Aval, proof of funds in flight.
 //
 // A party (Alice) locks funds in an escrow on a source chain. The lock is real,
 // irrevocable, and uniquely identified, but a Midnight contract cannot see another
 // chain. An attestor that CAN see the source chain registers a commitment to the
 // lock here. Alice then proves, in zero knowledge, that she holds a preimage of a
-// registered commitment whose amount clears a threshold — without revealing the
+// registered commitment whose amount clears a threshold, without revealing the
 // amount, the lock id, or which attestation she used.
 //
 // DUAL-LEDGER SUMMARY
@@ -85,7 +85,7 @@ export pure circuit nullifier_of(lock_id: Bytes<32>, salt: Bytes<32>): Bytes<32>
 export circuit register_attestor(): [] {
   assert(!attestor_registered, "attestor already registered");
   const id = derive_id(local_secret_key());
-  // DISCLOSE 1/6 — publishes the attestor's derived public id. Intended: the whole
+  // DISCLOSE 1/6, publishes the attestor's derived public id. Intended: the whole
   // point is that everyone can see which attestor this deployment trusts. The
   // secret key itself never leaves the witness.
   attestor = disclose(id);
@@ -100,10 +100,10 @@ export circuit register_attestor(): [] {
 export circuit register_attestation(leaf: Bytes<32>): [] {
   assert(attestor_registered, "no attestor registered");
   const id = derive_id(local_secret_key());
-  // DISCLOSE 2/6 — publishes only the BOOLEAN "caller is the attestor", not the
+  // DISCLOSE 2/6, publishes only the BOOLEAN "caller is the attestor", not the
   // caller's key. A single bit, and it is the access-control decision itself.
   assert(disclose(id == attestor), "caller is not the attestor");
-  // DISCLOSE 3/6 — publishes the commitment itself. Intended: the registry of
+  // DISCLOSE 3/6, publishes the commitment itself. Intended: the registry of
   // outstanding lock commitments is public by design. A leaf is a hash, so it
   // reveals no amount, no lock id, and no counterparty on its own.
   attestations.insert(disclose(leaf));
@@ -127,7 +127,7 @@ export circuit prove_funds_in_flight(
   const leaf = leaf_hash(lock_id, amount, counterparty, expiry, salt);
   const path = find_path(leaf);
 
-  // DISCLOSE (root) — publishes the Merkle ROOT computed from the private path, not
+  // DISCLOSE (root), publishes the Merkle ROOT computed from the private path, not
   // the path and not the leaf. The root is already public ledger state, so this
   // reveals nothing new. Critically it does NOT reveal WHICH leaf was used, so the
   // proof is unlinkable to a specific registered attestation.
@@ -136,17 +136,17 @@ export circuit prove_funds_in_flight(
 
   // Real on-chain expiry. Enforced by the ledger's own block time, not by a
   // timestamp the caller passes in, so the prover cannot backdate it.
-  // DISCLOSE 4/6 — publishes the expiry bound being checked. Deliberate: expiry is
+  // DISCLOSE 4/6, publishes the expiry bound being checked. Deliberate: expiry is
   // not sensitive, and it is bound into the leaf, so the prover cannot alter it
   // without invalidating the Merkle proof.
   assert(kernel.blockTimeLessThan(disclose(expiry)), "attestation expired");
 
-  // DISCLOSE 5/6 — publishes only the BOOLEAN "amount >= required". The amount
+  // DISCLOSE 5/6, publishes only the BOOLEAN "amount >= required". The amount
   // itself is never written. An observer learns the threshold was cleared and
   // nothing more.
   assert(disclose(amount >= required), "locked amount below required threshold");
 
-  // DISCLOSE 6/6 — publishes the nullifier. It is a domain-separated hash of the
+  // DISCLOSE 6/6, publishes the nullifier. It is a domain-separated hash of the
   // private lock_id and salt, so it is one-way and unlinkable to the leaf, but
   // stable enough to make double-spending the same lock impossible.
   const nul = disclose(nullifier_of(lock_id, salt));

@@ -89,7 +89,7 @@ export class AvalSimulator {
     );
   }
 
-  /** Swap identity/lock without losing ledger state — models a different caller. */
+  /** Swap identity/lock without losing ledger state, models a different caller. */
   private async run<T>(
     circuitId: string,
     privateState: AvalPrivateState,
@@ -129,7 +129,7 @@ export class AvalSimulator {
   }
 }
 
-/** Same hash the circuit uses — exported by the compiler, not reimplemented. */
+/** Same hash the circuit uses, exported by the compiler, not reimplemented. */
 export const leafFor = (lock: LockRecord, counterparty: Uint8Array, expiry: bigint): Uint8Array =>
   pureCircuits.leaf_hash(lock.lockId, lock.amount, counterparty, expiry, lock.salt);
 

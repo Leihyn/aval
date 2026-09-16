@@ -1,4 +1,4 @@
-# Aval — Implementation Plan
+# Aval: Implementation Plan
 
 ## Section 1: Plan Metadata
 
@@ -7,7 +7,7 @@
 | Project | Aval |
 | Hackathon | The Midnight Buildathon (AKINDO WaveHack), Wave 1 |
 | Hard deadline | 2026-09-16 15:00:00 UTC |
-| Safety line | 2026-09-16 13:00:00 UTC — package whatever exists |
+| Safety line | 2026-09-16 13:00:00 UTC, package whatever exists |
 | Architecture doc | `ARCHITECTURE.md` (896 lines) |
 | PRD | `PRD.md` (470 lines) |
 | Scope mode | rush |
@@ -24,7 +24,7 @@ Phases 1 and 2 are already complete at the time of writing. They are documented 
 
 | Phase | Purpose | Est. | Depends on | Status |
 |---|---|---:|---|---|
-| 1 | Toolchain and contract | 1.0h | — | **COMPLETE** |
+| 1 | Toolchain and contract | 1.0h | none | **COMPLETE** |
 | 2 | Simulator and test suite | 1.5h | 1 | **COMPLETE** |
 | 3 | Watcher, types, seed script | 0.5h | 2 | pending |
 | 4 | Demo frontend | 1.5h | 2 | pending |
@@ -37,9 +37,9 @@ Total remaining after Phase 2: **5.75h** against the window to the safety line. 
 
 ---
 
-## Section 3: Phase 1 — Toolchain and Contract  [COMPLETE]
+## Section 3: Phase 1, Toolchain and Contract  [COMPLETE]
 
-### Task 1.1 — Install the Compact toolchain
+### Task 1.1: Install the Compact toolchain
 
 ```bash
 curl --proto '=https' --tlsv1.2 -LsSf \
@@ -59,18 +59,18 @@ Expected: `0.34.0`
 **If it works:** continue to Task 1.2.
 
 **If `compact: command not found`:**
-1. `ls -la ~/.local/bin/compact` — confirm the binary landed
+1. `ls -la ~/.local/bin/compact`, confirm the binary landed
 2. `export PATH="$HOME/.local/bin:$PATH"`
 3. Re-run. If still failing, invoke the absolute path `~/.local/bin/compact`.
 
 **If `compact update` fails to fetch a toolchain:**
 1. `compact list` to see what is available for this platform
-2. `compact update 0.31` — the previous stable line, and the one that targets the currently-deployed ledger
+2. `compact update 0.31`, the previous stable line, and the one that targets the currently-deployed ledger
 3. If the contract then fails to compile on 0.31, the `kernel.blockTimeLessThan` call is the likely cause; replace the expiry assert with a public `now` argument and note the downgrade in the README.
 
 **If nothing works:** the technical gate cannot be cleared and the submission is not viable. Escalate immediately, do not continue building.
 
-### Task 1.2 — Write and compile the contract
+### Task 1.2: Write and compile the contract
 
 Copy `contract/src/inflight.compact` from **ARCHITECTURE.md Section 3** exactly.
 
@@ -93,7 +93,7 @@ Expected error shape if you mistype a `disclose`:
 
 **If you see `expected first argument of blockTimeLessThan to have type Uint<64>`:** remove the `as Field` cast; `expiry` is already `Uint<64>`.
 
-### Task 1.3 — Full compile with proving keys
+### Task 1.3: Full compile with proving keys
 
 ```bash
 compact compile src/inflight.compact out-full
@@ -112,9 +112,9 @@ Expected: six files, three `.prover` and three `.verifier`. Roughly 15s.
 
 ---
 
-## Section 4: Phase 2 — Simulator and Test Suite  [COMPLETE]
+## Section 4: Phase 2, Simulator and Test Suite  [COMPLETE]
 
-### Task 2.1 — Install the runtime
+### Task 2.1: Install the runtime
 
 ```bash
 cd contract
@@ -140,7 +140,7 @@ Run the node one-liner above.
 
 **If nothing works:** tests cannot run and 15% of the rubric is lost, but the technical gate still holds on compile alone. Document the failure in the README rather than pretending the suite exists, and continue to Phase 4.
 
-### Task 2.2 — Write the simulator
+### Task 2.2: Write the simulator
 
 Copy `contract/test/simulator.ts` from **ARCHITECTURE.md Section 5**.
 
@@ -150,7 +150,7 @@ Copy `contract/test/simulator.ts` from **ARCHITECTURE.md Section 5**.
 
 **Fix:** state is reached at `ctx.callContext.currentQueryContext.state`. Both the `public` getter and the context rebuild must use it.
 
-### Task 2.3 — Write and run the tests
+### Task 2.3: Write and run the tests
 
 Copy `contract/test/inflight.test.ts` from **ARCHITECTURE.md Section 6**.
 
@@ -172,9 +172,9 @@ Commit: `test: 22 passing simulator tests covering access control, nullifiers, b
 
 ---
 
-## Section 5: Phase 3 — Watcher, Types, Seed Script
+## Section 5: Phase 3, Watcher, Types, Seed Script
 
-### Task 3.1 — Extract shared types
+### Task 3.1: Extract shared types
 
 Create `contract/src-ts/types.ts` from **ARCHITECTURE.md Section 4**.
 
@@ -187,7 +187,7 @@ Expected: no errors referencing `types.ts`.
 
 Commit: `types: shared LockRecord, AvalPrivateState, LockedEvent`
 
-### Task 3.2 — Write the attestor watcher
+### Task 3.2: Write the attestor watcher
 
 Create `contract/src-ts/watcher.ts` from **ARCHITECTURE.md Section 7**.
 
@@ -204,7 +204,7 @@ Symptom: `no merkle path: leaf is not registered` on a lock you just attested.
 
 Commit: `watcher: attest source-chain locks using the circuit's own leaf hash`
 
-### Task 3.3 — Write the seed script
+### Task 3.3: Write the seed script
 
 Create `contract/scripts/seed-demo.ts` from **ARCHITECTURE.md Section 8**.
 
@@ -230,9 +230,9 @@ Commit: `scripts: demo seed produced by real circuit execution`
 
 ---
 
-## Section 6: Phase 4 — Demo Frontend
+## Section 6: Phase 4, Demo Frontend
 
-### Task 4.1 — Scaffold
+### Task 4.1: Scaffold
 
 ```bash
 mkdir -p frontend/src/lib
@@ -241,7 +241,7 @@ cd frontend && npm install
 
 Copy `package.json`, `vite.config.ts`, `index.html` from **ARCHITECTURE.md Section 9**.
 
-### Task 4.2 — Demo driver and app
+### Task 4.2: Demo driver and app
 
 Copy `frontend/src/lib/demo.ts`, `src/main.tsx`, `src/index.css`, `src/App.tsx` from **ARCHITECTURE.md Section 9**.
 
@@ -259,7 +259,7 @@ Run: `npm run build`
 
 **If `Failed to resolve import "@contract/test/simulator"`:**
 1. Confirm the `resolve.alias` block in `vite.config.ts` points at `../contract`
-2. Vite aliases do not append extensions for TS across package roots — import the explicit path `@contract/test/simulator.ts` if needed
+2. Vite aliases do not append extensions for TS across package roots, import the explicit path `@contract/test/simulator.ts` if needed
 
 **If the build fails inside `@midnight-ntwrk/compact-runtime` (node built-ins, wasm, or CJS interop):**
 1. Keep `optimizeDeps.exclude` set for that package
@@ -268,7 +268,7 @@ Run: `npm run build`
 
 **If nothing works:** cut the frontend. The submission still clears the gate and scores Engineering + QA. Note the cut in the README. Do NOT let this block Phases 5-8.
 
-### Task 4.3 — Visual check
+### Task 4.3: Visual check
 
 ```bash
 npm run dev
@@ -288,9 +288,9 @@ Commit: `frontend: two-pane privacy demo driven by the real simulator`
 
 ---
 
-## Section 7: Phase 5 — README, LICENSE, Domain Guide
+## Section 7: Phase 5, README, LICENSE, Domain Guide
 
-### Task 5.1 — LICENSE
+### Task 5.1: LICENSE
 
 ```bash
 curl -sL https://www.apache.org/licenses/LICENSE-2.0.txt -o LICENSE
@@ -312,7 +312,7 @@ These are the two cheapest auto-DQs in the competition.
 3. If `gh` is unavailable: set it manually in the GitHub UI under the repo description gear icon.
 4. Verify by loading the public repo page in a logged-out browser.
 
-### Task 5.2 — README
+### Task 5.2: README
 
 The README is the judge's landing page. Above the fold it must carry: what Aval proves, the one command that runs the tests, and the passing count. It must also state the attestor trust assumption plainly (DT-6) and name every prerequisite explicitly, which is the direct answer to the loudest complaint in Midnight's own docs issues.
 
@@ -328,7 +328,7 @@ Required sections: what it is, the problem, how it works (with the dual-ledger t
 3. Name the residual honestly: a malicious attestor can fabricate a lock. This is the same trust model as every fast-finality bridge shipping today. Aval adds privacy to that model; it does not claim to beat it.
 4. Never bury this in a footnote. Judges reward a bounded assumption and punish a hand-wave.
 
-### Task 5.3 — Domain guide
+### Task 5.3: Domain guide
 
 Generate `DOMAIN-GUIDE.md` from **ARCHITECTURE.md Section 10**.
 
@@ -344,13 +344,13 @@ Commit: `docs: README, Apache-2.0 license, domain guide`
 
 ---
 
-## Section 8: Phase 6 — Slide Deck and Demo Video
+## Section 8: Phase 6, Slide Deck and Demo Video
 
-### Task 6.1 — Slide deck
+### Task 6.1: Slide deck
 
 Eight slides: the dead window; why you cannot just show them; the primitive; the dual-ledger split; the demo screenshot; the security table; the trust ladder; the roadmap.
 
-### Task 6.2 — Demo video
+### Task 6.2: Demo video
 
 Follow the scene script in **PRD.md Section 6**. Target 3 minutes.
 
@@ -379,9 +379,9 @@ Commit: `docs: slide deck and demo video links`
 
 ---
 
-## Section 9: Phase 7 — Deploy and Livetest
+## Section 9: Phase 7, Deploy and Livetest
 
-### Task 7.1 — Deploy the frontend
+### Task 7.1: Deploy the frontend
 
 ```bash
 cd frontend && npx vercel deploy --prod
@@ -399,7 +399,7 @@ Expected: a URL. Confirm HTTP 200 in a logged-out browser.
 3. If Vercel is unavailable, push `dist/` to a `gh-pages` branch and enable GitHub Pages
 4. If both fail: the repo plus the video still demonstrate the UX. A live URL is not a gate requirement. Note it and move on.
 
-### Task 7.2 — Livetest
+### Task 7.2: Livetest
 
 Open the deployed URL logged out. Run the hero flow. Confirm the ledger pane never shows an amount.
 
@@ -411,13 +411,13 @@ Open the deployed URL logged out. Run the hero flow. Confirm the ledger pane nev
 
 ---
 
-## Section 10: Phase 8 — Package and Submit
+## Section 10: Phase 8, Package and Submit
 
-### Task 8.1 — Proof artifacts
+### Task 8.1: Proof artifacts
 
 Write `submission/proof.md` containing the actual compile output, the actual test output, the ledger dump, and the toolchain versions. Paste real output; never retype it.
 
-### Task 8.2 — Final verification
+### Task 8.2: Final verification
 
 ```bash
 cd contract && npm install && npm test          # from a clean clone
@@ -428,14 +428,14 @@ cd ../frontend && npm run build
 
 At the safety line (13:00 UTC), stop building and package. Priority order for what must exist:
 
-1. Public repo, Apache-2.0, `midnightntwrk` topic — gate
-2. Compiling contract — gate
-3. README — gate
-4. Demo video, at whatever rung of DT-4 is reachable — gate
-5. Slide deck — gate
-6. Passing tests — 15%
-7. Frontend — 15%
-8. Live URL — not a gate
+1. Public repo, Apache-2.0, `midnightntwrk` topic, gate
+2. Compiling contract, gate
+3. README, gate
+4. Demo video, at whatever rung of DT-4 is reachable, gate
+5. Slide deck, gate
+6. Passing tests, 15%
+7. Frontend, 15%
+8. Live URL, not a gate
 
 Items 1-5 are auto-DQ if missing. Items 6-8 are score. **Never trade a gate item for a score item.**
 
@@ -447,7 +447,7 @@ If any artifact describes Aval as a finished platform for four verticals, fix th
 
 Alice cannot prove without the preimage. This fails closed: no funds move, nothing is at risk. In Wave 1 the channel is a direct function return inside the demo. Encryption, retry, and delivery guarantees are Wave 2. Do not build them now.
 
-### Task 8.3 — Submit
+### Task 8.3: Submit
 
 Work `SUBMISSION-CHECKLIST.md` top to bottom. Submit with more than 60 minutes to spare.
 

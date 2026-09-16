@@ -74,7 +74,7 @@ describe('attestation registry access control', () => {
   });
 });
 
-describe('prove_funds_in_flight — the money path', () => {
+describe('prove_funds_in_flight, the money path', () => {
   const lock = lockOf('lock-1', 50_000n);
 
   beforeEach(async () => {
@@ -115,7 +115,7 @@ describe('prove_funds_in_flight — the money path', () => {
   });
 });
 
-describe('nullifier — one lock backs exactly one proof', () => {
+describe('nullifier, one lock backs exactly one proof', () => {
   const lock = lockOf('lock-1', 50_000n);
 
   beforeEach(async () => {
@@ -168,7 +168,7 @@ describe('nullifier — one lock backs exactly one proof', () => {
   });
 });
 
-describe('binding — an attestation is not transferable', () => {
+describe('binding, an attestation is not transferable', () => {
   const lock = lockOf('lock-1', 50_000n);
 
   beforeEach(async () => {
@@ -202,7 +202,7 @@ describe('binding — an attestation is not transferable', () => {
   });
 });
 
-describe('expiry — enforced by ledger block time', () => {
+describe('expiry, enforced by ledger block time', () => {
   const lock = lockOf('lock-1', 50_000n);
 
   beforeEach(async () => {
@@ -227,7 +227,7 @@ describe('expiry — enforced by ledger block time', () => {
   });
 });
 
-describe('privacy — what the public ledger does and does not reveal', () => {
+describe('privacy, what the public ledger does and does not reveal', () => {
   const lock = lockOf('lock-1', 50_000n);
 
   beforeEach(async () => {

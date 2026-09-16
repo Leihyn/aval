@@ -1,4 +1,4 @@
-# Aval — Feature Observables
+# Aval: Feature Observables
 
 Each P0/P1 feature has one verifiable observable: a check that proves the feature
 works, not merely that the code exists. `Verified` reflects actual execution on this

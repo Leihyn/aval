@@ -1,16 +1,16 @@
-# SUBMISSION CHECKLIST — Midnight Buildathon Wave 1 (AKINDO)
+# SUBMISSION CHECKLIST: Midnight Buildathon Wave 1 (AKINDO)
 
 **Hard deadline: 2026-09-16 15:00:00 UTC.** Only the version submitted by then is judged for Wave 1.
 Submit at: https://app.akindo.io/wave-hacks/jaMZjqPOBsLXvjdG
 
 > Source: AKINDO public API + Official Rules §6 and §7. Verified, not inferred.
 
-## TECHNICAL GATE — any miss is automatic disqualification
+## TECHNICAL GATE: any miss is automatic disqualification
 
-- [ ] **At least one Compact contract that COMPILES**  (`contract/src/inflight.compact` — verified compiling)
+- [ ] **At least one Compact contract that COMPILES**  (`contract/src/inflight.compact`, verified compiling)
 - [ ] Meaningful Midnight-related functionality (not a fork, copy, or superficial modification)
 - [ ] **Public GitHub repository**
-- [ ] **`midnightntwrk` topic label applied on the GitHub repo** (this is a repo *topic*, not a file — easy to forget)
+- [ ] **`midnightntwrk` topic label applied on the GitHub repo** (this is a repo *topic*, not a file, easy to forget)
 - [ ] **Apache License 2.0** on the Midnight-related code
 - [ ] README covering: project, setup, architecture, Midnight integration, how judges test it
 - [ ] **Slide deck** (pitch presentation)
@@ -24,7 +24,7 @@ Submit at: https://app.akindo.io/wave-hacks/jaMZjqPOBsLXvjdG
 - [ ] Entry questions answered: **Discord ID** (required), **Telegram ID** (required)
 - [ ] Joined Midnight Discord: https://discord.gg/SUZNRF6fu
 
-## Scoring surface — map each artifact to the rubric
+## Scoring surface: map each artifact to the rubric
 
 | Weight | Criterion | Artifact that earns it |
 |---|---|---|
@@ -39,7 +39,7 @@ Submit at: https://app.akindo.io/wave-hacks/jaMZjqPOBsLXvjdG
 
 - Distribution mode is **`point`**: the $3,500 Wave 1 pool is split **proportionally to judge points**, not winner-take-all.
 - 59 submissions in Wave 1. Average is ~$59. The real prize is selection into the **Midnight Build Club** (8 weeks, ends in a pitch to Midnight's investor network and accelerator).
-- Wave 2 ($4,000, Sep 27–Oct 17) and Wave 3 ($5,000, Oct 27–Nov 16) reward demonstrated progress on the same project. Keep a "what changed since Wave 1" record.
+- Wave 2 ($4,000, Sep 27-Oct 17) and Wave 3 ($5,000, Oct 27-Nov 16) reward demonstrated progress on the same project. Keep a "what changed since Wave 1" record.
 
 ## Submission day protocol
 

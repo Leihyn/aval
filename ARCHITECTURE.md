@@ -1,11 +1,11 @@
-# Aval — Architecture Document
+# Aval: Architecture Document
 
 **THE SINGLE SOURCE OF TRUTH.** Every file, every line, every config.
 
 **Verification legend**
-- `[VERIFIED]` — this exact code exists on disk and has been executed successfully on this machine
-- `[UNVERIFIED]` — pattern is sound but has not been run yet
-- `[ASSUMED]` — no verifiable source, test immediately
+- `[VERIFIED]`, this exact code exists on disk and has been executed successfully on this machine
+- `[UNVERIFIED]`, pattern is sound but has not been run yet
+- `[ASSUMED]`, no verifiable source, test immediately
 
 **Toolchain (verified by execution, not by reading docs):**
 
@@ -153,12 +153,12 @@ The complete protocol. Three circuits: bootstrap an attestor, register a lock co
 ### Code
 
 #### File: `contract/src/inflight.compact`
-`[VERIFIED]` — compiles to 3 circuits and 6 proving/verifier keys in 14.5s. Source: executed on this machine.
+`[VERIFIED]`, compiles to 3 circuits and 6 proving/verifier keys in 14.5s. Source: executed on this machine.
 
 ```compact
 pragma language_version >= 0.26;
 
-// Aval — proof of funds in flight.
+// Aval, proof of funds in flight.
 //
 // DUAL-LEDGER SUMMARY
 //   Private (witness, never written):  lock_id, amount, salt, merkle path
@@ -206,7 +206,7 @@ export pure circuit nullifier_of(lock_id: Bytes<32>, salt: Bytes<32>): Bytes<32>
 export circuit register_attestor(): [] {
   assert(!attestor_registered, "attestor already registered");
   const id = derive_id(local_secret_key());
-  // DISCLOSE 1/6 — publishes the attestor's derived public id. The secret key never leaves witness state.
+  // DISCLOSE 1/6, publishes the attestor's derived public id. The secret key never leaves witness state.
   attestor = disclose(id);
   attestor_registered = true;
 }
@@ -214,9 +214,9 @@ export circuit register_attestor(): [] {
 export circuit register_attestation(leaf: Bytes<32>): [] {
   assert(attestor_registered, "no attestor registered");
   const id = derive_id(local_secret_key());
-  // DISCLOSE 2/6 — publishes only the BOOLEAN "caller is the attestor". One bit, and it is the access decision itself.
+  // DISCLOSE 2/6, publishes only the BOOLEAN "caller is the attestor". One bit, and it is the access decision itself.
   assert(disclose(id == attestor), "caller is not the attestor");
-  // DISCLOSE 3/6 — publishes the commitment. A leaf is a hash: no amount, no lock id, no counterparty.
+  // DISCLOSE 3/6, publishes the commitment. A leaf is a hash: no amount, no lock id, no counterparty.
   attestations.insert(disclose(leaf));
 }
 
@@ -232,20 +232,20 @@ export circuit prove_funds_in_flight(
   const leaf = leaf_hash(lock_id, amount, counterparty, expiry, salt);
   const path = find_path(leaf);
 
-  // DISCLOSE (root) — publishes the ROOT computed from the private path, not the path and
+  // DISCLOSE (root), publishes the ROOT computed from the private path, not the path and
   // not the leaf. The root is already public state. Critically it does NOT reveal WHICH leaf
   // was used, so the proof stays unlinkable to a specific attestation.
   const root = disclose(merkleTreePathRoot<10, Bytes<32>>(path));
   assert(attestations.checkRoot(root), "attestation not registered");
 
-  // DISCLOSE 4/6 — publishes the expiry bound. Not sensitive, and bound into the leaf so the
+  // DISCLOSE 4/6, publishes the expiry bound. Not sensitive, and bound into the leaf so the
   // prover cannot alter it without invalidating the Merkle proof.
   assert(kernel.blockTimeLessThan(disclose(expiry)), "attestation expired");
 
-  // DISCLOSE 5/6 — publishes only the BOOLEAN "amount >= required". The amount is never written.
+  // DISCLOSE 5/6, publishes only the BOOLEAN "amount >= required". The amount is never written.
   assert(disclose(amount >= required), "locked amount below required threshold");
 
-  // DISCLOSE 6/6 — publishes the nullifier: a one-way hash of private lock_id and salt.
+  // DISCLOSE 6/6, publishes the nullifier: a one-way hash of private lock_id and salt.
   const nul = disclose(nullifier_of(lock_id, salt));
   assert(!spent.member(nul), "this lock has already backed a proof");
   spent.insert(nul);
@@ -263,7 +263,7 @@ Compiles clean. Generates `register_attestor.zkir`, `register_attestation.zkir`,
 ## Section 4: Shared Types
 
 #### File: `contract/src-ts/types.ts`
-`[UNVERIFIED]` — extraction of types already exercised inside `test/simulator.ts`.
+`[UNVERIFIED]`, extraction of types already exercised inside `test/simulator.ts`.
 
 ```ts
 // File: contract/src-ts/types.ts
@@ -315,7 +315,7 @@ The witness `find_path` reads the PUBLIC tree via `ctx.ledger.attestations.findP
 ### Code
 
 #### File: `contract/test/simulator.ts`
-`[VERIFIED]` — executed; 22 tests pass against it.
+`[VERIFIED]`, executed; 22 tests pass against it.
 
 See the file on disk. Its exported surface, which everything else depends on:
 
@@ -353,7 +353,7 @@ Prove the security properties mechanically, and prove the privacy property by as
 ### Code
 
 #### File: `contract/test/inflight.test.ts`
-`[VERIFIED]` — 22 tests, all passing, 671ms.
+`[VERIFIED]`, 22 tests, all passing, 671ms.
 
 Structure (full source on disk):
 
@@ -361,11 +361,11 @@ Structure (full source on disk):
 |---|---:|---|
 | attestor registration | 3 | Bootstrap is once-only; the secret key is never published |
 | attestation registry access control | 2 | Only the attestor can register a commitment |
-| prove_funds_in_flight — the money path | 4 | Threshold logic including the exact-equality boundary; unregistered locks rejected |
-| nullifier — one lock backs exactly one proof | 4 | Double-spend blocked even by a different caller; distinct locks still independent |
-| binding — an attestation is not transferable | 3 | Counterparty swap, amount inflation, and expiry extension all rejected |
-| expiry — enforced by ledger block time | 2 | Accepted at 8,999; rejected at 9,001 |
-| privacy — what the ledger does and does not reveal | 4 | Amount absent from a full public-state dump; lock id absent; nullifier unlinkable to leaf |
+| prove_funds_in_flight, the money path | 4 | Threshold logic including the exact-equality boundary; unregistered locks rejected |
+| nullifier, one lock backs exactly one proof | 4 | Double-spend blocked even by a different caller; distinct locks still independent |
+| binding, an attestation is not transferable | 3 | Counterparty swap, amount inflation, and expiry extension all rejected |
+| expiry, enforced by ledger block time | 2 | Accepted at 8,999; rejected at 9,001 |
+| privacy, what the ledger does and does not reveal | 4 | Amount absent from a full public-state dump; lock id absent; nullifier unlinkable to leaf |
 
 The privacy group is the one that matters for judging. It serialises the entire public ledger and asserts the amount string does not appear in it.
 
@@ -384,7 +384,7 @@ It computes the leaf with `pureCircuits.leaf_hash` exported by the compiler, nev
 ### Code
 
 #### File: `contract/src-ts/watcher.ts`
-`[UNVERIFIED]` — composed from verified primitives (`pureCircuits.leaf_hash` and `AvalSimulator.registerAttestation` are both exercised by passing tests), but this wrapper has not been run yet.
+`[UNVERIFIED]`, composed from verified primitives (`pureCircuits.leaf_hash` and `AvalSimulator.registerAttestation` are both exercised by passing tests), but this wrapper has not been run yet.
 
 ```ts
 // File: contract/src-ts/watcher.ts
@@ -441,7 +441,7 @@ Produce demo state through real circuit execution. Thesis field 5 forbids fabric
 ### Code
 
 #### File: `contract/scripts/seed-demo.ts`
-`[UNVERIFIED]` — composed from verified primitives.
+`[UNVERIFIED]`, composed from verified primitives.
 
 ```ts
 // File: contract/scripts/seed-demo.ts
@@ -564,7 +564,7 @@ export default defineConfig({
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-    <title>Aval — proof of funds in flight</title>
+    <title>Aval, proof of funds in flight</title>
   </head>
   <body>
     <div id="root"></div>
@@ -591,7 +591,7 @@ createRoot(document.getElementById('root')!).render(
 ```
 
 #### File: `frontend/src/lib/demo.ts`
-`[UNVERIFIED]` — wraps verified simulator calls.
+`[UNVERIFIED]`, wraps verified simulator calls.
 
 ```ts
 // File: frontend/src/lib/demo.ts
@@ -815,7 +815,7 @@ There is no runtime configuration in Wave 1. No RPC endpoints, no API keys, no c
 
 | Variable | Used by | Where to obtain | Required before |
 |---|---|---|---|
-| (none) | — | — | — |
+| (none) | none |, | none |
 
 Wave 1 deliberately requires **zero credentials**. A judge clones and runs. The Wave 2 attestor, which listens to a real Ethereum RPC, will introduce `SOURCE_RPC_URL` and `ATTESTOR_PRIVATE_KEY`; neither exists yet and neither is stubbed, because a `.env` full of unused placeholders is noise.
 
@@ -872,7 +872,7 @@ No Midnight testnet deployment in Wave 1. Toolchain 0.34 targets ledger 9, which
 
 | Item | Value |
 |---|---|
-| Contract address | none — not deployed in Wave 1 |
+| Contract address | none, not deployed in Wave 1 |
 | Source-chain escrow | simulated; real listener is Wave 2 |
 | Explorer links | none applicable |
 | Midnight docs | https://docs.midnight.network/ |
@@ -890,6 +890,6 @@ No Midnight testnet deployment in Wave 1. Toolchain 0.34 targets ledger 9, which
 | Watcher | compiled contract `pureCircuits` | in-process import | none | `leaf_hash` returns 32 bytes | P1 |
 | Frontend | simulator | bundler alias `@contract` | none | `npm run build` exits 0 | P1 |
 | Frontend | Vercel | HTTPS | Vercel token (deploy only) | HTTP 200 | P2 |
-| Watcher | source-chain RPC | JSON-RPC | `SOURCE_RPC_URL` | **Wave 2, not built** | — |
+| Watcher | source-chain RPC | JSON-RPC | `SOURCE_RPC_URL` | **Wave 2, not built** | none |
 
 Wire's test list derives from the P0 and P1 rows. The final row is deliberately out of scope and must not be counted as a broken connection.

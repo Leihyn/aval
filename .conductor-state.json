@@ -33,7 +33,7 @@
     ],
     "demoFormat": "recorded",
     "demo": {
-      "logo_description": "Aval \u2014 trade-finance guarantee mark, midnight/dark palette",
+      "logo_description": "Aval — trade-finance guarantee mark, midnight/dark palette",
       "music_vibe": "none",
       "creative_overrides": "let skill decide"
     },
@@ -56,7 +56,7 @@
         "status": "skipped",
         "dispatched_at": "2026-09-16T03:45:11Z",
         "completed_at": "2026-09-16T03:46:19Z",
-        "note": "SKIPPED for two independent reasons, neither of which is time pressure. (1) SKILL NOT INSTALLED: ~/.claude/skills/hackathon-warroom does not exist on this machine; it is referenced by phase-catalog.md but absent. All 16 other phase skills verified present. (2) DOCUMENTED SKIP CONDITION MET: phase-catalog.md line 127 \u2014 'If user already has a specific idea: skip warroom, set pipeline.phases.warroom.status = skipped. Checkpoint 2 still fires using the warroom-skipped variant.' The user selected the idea directly; Checkpoint 2 (idea_selection) is already answered in checkpoints_answered."
+        "note": "SKIPPED for two independent reasons, neither of which is time pressure. (1) SKILL NOT INSTALLED: ~/.claude/skills/hackathon-warroom does not exist on this machine; it is referenced by phase-catalog.md but absent. All 16 other phase skills verified present. (2) DOCUMENTED SKIP CONDITION MET: phase-catalog.md line 127 — 'If user already has a specific idea: skip warroom, set pipeline.phases.warroom.status = skipped. Checkpoint 2 still fires using the warroom-skipped variant.' The user selected the idea directly; Checkpoint 2 (idea_selection) is already answered in checkpoints_answered."
       },
       "forge": {
         "status": "running",
@@ -164,15 +164,15 @@
       "result": "PASS"
     },
     "keyFinding": "In-flight settlement category is EMPTY (0 of 59 submissions). Dev infra ~1. Credit/solvency 15 and identity 8 are saturated; identity contains a returning 3rd-place Midnight winner (bytewizard42i, 3 entries this wave).",
-    "criticalConstraint": "No in-circuit ECDSA on Midnight (Secp256k1* unbound in shipped 0.34.0). Deploy NOT required \u2014 gate is compile-only, no Docker needed."
+    "criticalConstraint": "No in-circuit ECDSA on Midnight (Secp256k1* unbound in shipped 0.34.0). Deploy NOT required — gate is compile-only, no Docker needed."
   },
   "warroomState": {
     "status": "skipped",
     "reason": "skill not installed AND documented skip condition met (user supplied the idea)",
-    "selected_idea": "Aval \u2014 prove money is committed but not yet arrived, so a counterparty can act now instead of waiting for bridge finality",
+    "selected_idea": "Aval — prove money is committed but not yet arrived, so a counterparty can act now instead of waiting for bridge finality",
     "ideas_alive": 1,
     "ideas_killed": 0,
-    "deliberation": "none \u2014 single user-selected idea"
+    "deliberation": "none — single user-selected idea"
   },
   "forgeState": null,
   "critiqueState": null,
@@ -222,7 +222,7 @@
     "manifest": true,
     "idea_selection": {
       "answered": true,
-      "choice": "Aval \u2014 proof of funds in flight on Midnight",
+      "choice": "Aval — proof of funds in flight on Midnight",
       "modifications": "User chose the vertical directly: prove money committed but not yet arrived so a counterparty can act now. Wave-1 scope = ONE vertical (funds in flight) + primitive + roadmap for identity/solvency/invoices."
     },
     "post_forge_credentials": {
