@@ -36,7 +36,6 @@ export const DEMO_LOCK: LockRecord = {
 
 export async function bootstrap() {
   const sim = await AvalSimulator.create(ATTESTOR_KEY);
-  await sim.registerAttestor(ATTESTOR_KEY, NOW);
   await sim.registerAttestation(ATTESTOR_KEY, leafFor(DEMO_LOCK, BOB, EXPIRY), NOW);
   return sim;
 }
@@ -61,7 +60,6 @@ export async function prove(sim: AvalSimulator, required: bigint) {
  */
 export async function runWithAmount(amount: bigint, required: bigint) {
   const sim = await AvalSimulator.create(ATTESTOR_KEY);
-  await sim.registerAttestor(ATTESTOR_KEY, NOW);
   const lock: LockRecord = {
     lockId: bytes32('eth-lock-8837'),
     amount,

@@ -1,12 +1,17 @@
 $ npm test
  RUN  v2.1.9 /Users/machine/Desktop/dev/aval/contract
+stdout | test/bootstrap.test.ts > bootstrap: the attestor role is fixed at deploy and cannot be front-run > a stranger cannot claim the attestor role after deploy
+  attestor is the deployer   : true
+  stranger can write registry: false
+  deployer can write registry: true
+ ✓ test/bootstrap.test.ts > bootstrap: the attestor role is fixed at deploy and cannot be front-run > a stranger cannot claim the attestor role after deploy
 stdout | test/soundness.test.ts > soundness: the merkle path must open the leaf the circuit recomputed > rejects a forged proof that reuses a real attestation path for different terms
   forged proof accepted        : false
   fills after forgery          : 0
   real lock nullifier spent?   : false
  ✓ test/soundness.test.ts > soundness: the merkle path must open the leaf the circuit recomputed > rejects a forged proof that reuses a real attestation path for different terms
- ✓ test/inflight.test.ts > attestor registration > starts with no attestor and an empty ledger
- ✓ test/inflight.test.ts > attestor registration > registers an attestor exactly once
+ ✓ test/inflight.test.ts > attestor registration > starts with the deploy-time attestor and an otherwise empty ledger
+ ✓ test/inflight.test.ts > attestor registration > fixes the attestor at deploy, leaving no bootstrap to front-run
  ✓ test/inflight.test.ts > attestor registration > never writes the attestor secret key to the public ledger
  ✓ test/inflight.test.ts > attestation registry access control > lets the attestor register a commitment
  ✓ test/inflight.test.ts > attestation registry access control > rejects a non-attestor trying to register a commitment
@@ -28,7 +33,7 @@ stdout | test/soundness.test.ts > soundness: the merkle path must open the leaf 
  ✓ test/inflight.test.ts > privacy, indistinguishability of the amount > never writes the decimal amount into any public field
  ✓ test/inflight.test.ts > privacy, indistinguishability of the amount > never exposes the private lock id or salt in public state
  ✓ test/inflight.test.ts > privacy, indistinguishability of the amount > publishes a nullifier that is not the registered leaf
- Test Files  2 passed (2)
-      Tests  24 passed (24)
-   Start at  07:46:34
-   Duration  1.47s (transform 137ms, setup 0ms, collect 272ms, tests 886ms, environment 0ms, prepare 218ms)
+ Test Files  3 passed (3)
+      Tests  25 passed (25)
+   Start at  09:38:42
+   Duration  1.39s (transform 276ms, setup 0ms, collect 561ms, tests 949ms, environment 0ms, prepare 246ms)

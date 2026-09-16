@@ -1,5 +1,6 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 import { AvalSimulator, bytes32, leafFor, nullifierFor, type LockRecord } from './simulator.js';
+import { pureCircuits } from '../out/contract/index.js';
 
 const ATTESTOR = bytes32('attestor-key');
 const ALICE = bytes32('alice-key');
@@ -19,11 +20,7 @@ const lockOf = (id: string, amount: bigint): LockRecord => ({
 let sim: AvalSimulator;
 
 /** Fresh contract with the attestor already bootstrapped. */
-const freshWithAttestor = async () => {
-  const s = await AvalSimulator.create(ATTESTOR);
-  await s.registerAttestor(ATTESTOR);
-  return s;
-};
+const freshWithAttestor = async () => await AvalSimulator.create(ATTESTOR);
 
 /** Attestor observes a source-chain lock and registers its commitment. */
 const attest = async (s: AvalSimulator, lock: LockRecord, counterparty = BOB, expiry = EXPIRY) => {
@@ -35,20 +32,22 @@ describe('attestor registration', () => {
     sim = await AvalSimulator.create(ATTESTOR);
   });
 
-  it('starts with no attestor and an empty ledger', () => {
-    expect(sim.public.attestor_registered).toBe(false);
+  it('starts with the deploy-time attestor and an otherwise empty ledger', () => {
+    expect(sim.public.attestor_registered).toBe(true);
     expect(sim.public.fills).toBe(0n);
     expect(sim.public.spent.isEmpty()).toBe(true);
   });
 
-  it('registers an attestor exactly once', async () => {
-    await sim.registerAttestor(ATTESTOR);
+  it('fixes the attestor at deploy, leaving no bootstrap to front-run', async () => {
+    // The attestor is set by the constructor from the deployer's own key. There is
+    // no post-deploy bootstrap circuit, so a stranger cannot claim the role and
+    // brick the deployment, which an earlier permissionless version allowed.
     expect(sim.public.attestor_registered).toBe(true);
-    await expect(sim.registerAttestor(ATTESTOR)).rejects.toThrow(/already registered/);
+    expect(Buffer.from(sim.public.attestor).toString('hex'))
+      .toBe(Buffer.from(pureCircuits.derive_id(ATTESTOR)).toString('hex'));
   });
 
   it('never writes the attestor secret key to the public ledger', async () => {
-    await sim.registerAttestor(ATTESTOR);
     const published = Buffer.from(sim.public.attestor).toString('hex');
     expect(published).not.toBe(Buffer.from(ATTESTOR).toString('hex'));
     expect(published).toHaveLength(64);
@@ -251,7 +250,6 @@ describe('privacy, indistinguishability of the amount', () => {
   /** Fresh contract, one attested lock of `amount`, one successful proof. */
   const runWithAmount = async (amount: bigint, required = 1_000n) => {
     const s = await AvalSimulator.create(ATTESTOR);
-    await s.registerAttestor(ATTESTOR, Number(NOW));
     const l = { lockId: bytes32('lock-1'), amount, salt: bytes32('salt-lock-1') };
     await s.registerAttestation(ATTESTOR, leafFor(l, BOB, EXPIRY), Number(NOW));
     await s.proveFundsInFlight({

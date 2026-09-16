@@ -1,10 +1,8 @@
 $ compact compile src/inflight.compact out-full
-Compiling 3 circuits:
+Compiling 2 circuits:
 
 $ ls out-full/keys/
 prove_funds_in_flight.prover
 prove_funds_in_flight.verifier
 register_attestation.prover
 register_attestation.verifier
-register_attestor.prover
-register_attestor.verifier

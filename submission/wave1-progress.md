@@ -4,15 +4,32 @@ Aval was started and completed inside Wave 1. There is no prior submission to di
 
 ## Built this Wave
 
-**The contract.** `contract/src/inflight.compact`, three circuits: `register_attestor`, `register_attestation`, `prove_funds_in_flight`. Compiles to three ZKIR circuits and six proving/verifier keys. Private state is carried by five witnesses; six explicit `disclose()` sites bridge private to public, each annotated in source with what an observer actually learns.
+**The contract.** `contract/src/inflight.compact`, two circuits: `register_attestation` and `prove_funds_in_flight`, plus a constructor that fixes the attestor at deploy. Compiles to two ZKIR circuits and four proving/verifier keys. Private state is carried by five witnesses; 8 explicit `disclose()` sites bridge private to public, each annotated in source with what an observer actually learns.
 
-**A test suite that asserts the privacy claim rather than stating it.** 24 tests, all passing, covering attestor bootstrap, registry access control, the threshold path including the exact-equality boundary, nullifier-based double-spend prevention, non-transferable binding (counterparty swap, amount inflation, expiry extension all rejected), block-time expiry in both directions, and four privacy tests that serialise the entire public ledger and assert the amount does not appear in it.
+**A test suite that asserts the privacy claim rather than stating it.** 25 tests, all passing, covering attestor bootstrap, registry access control, the threshold path including the exact-equality boundary, nullifier-based double-spend prevention, non-transferable binding (counterparty swap, amount inflation, expiry extension all rejected), block-time expiry in both directions, and four privacy tests that serialise the entire public ledger and assert the amount does not appear in it.
 
 **An attestor watcher and a seed script**, both driving the real simulator. The watcher computes commitments with `pureCircuits.leaf_hash` exported by the compiler rather than a reimplementation, so there is exactly one definition of the commitment in the system.
 
 **A two-pane demo frontend.** React 19, Vite 6, Tailwind v4. It imports the same simulator the tests use, so it is not a mock of the protocol. Getting the Midnight WASM runtime to bundle for a browser required `vite-plugin-wasm` and an `esnext` target.
 
 **An attack script** that runs six real attacks and prints the six revert strings the circuit produces.
+
+## Two security bugs found by adversarial review, both fixed with regression tests
+
+**A total soundness break.** `prove_funds_in_flight` never bound the witness-supplied Merkle
+path to the leaf it recomputed. `find_path` is a witness: it runs on the prover's machine and
+is not cryptographically verified, so passing the leaf into it was a hint, not a constraint.
+Exploited before fixing: a proof claiming 2^64-1 units against a real 1-unit attestation, to
+the wrong counterparty, past expiry, was ACCEPTED, and left the honest lock's nullifier
+unspent. Fixed with one assert. The exploit is now `contract/test/soundness.test.ts`.
+
+**A permissionless bootstrap.** `register_attestor()` could be called by anyone, so a stranger
+could front-run deployment, install their own id, and permanently brick the contract with no
+rotation path. Verified by exploit. Replaced with a constructor that fixes the attestor at
+deploy, closing the window entirely. Regression test at `contract/test/bootstrap.test.ts`.
+
+Both are disclosed rather than quietly patched, because the submission's whole argument is
+that claims should be checkable.
 
 ## Design decisions worth surfacing
 

@@ -93,18 +93,6 @@
       }
     },
     {
-      "name": "register_attestor",
-      "pure": false,
-      "proof": true,
-      "arguments": [
-      ],
-      "result-type": {
-        "type-name": "Tuple",
-        "types": [
-        ]
-      }
-    },
-    {
       "name": "register_attestation",
       "pure": false,
       "proof": true,

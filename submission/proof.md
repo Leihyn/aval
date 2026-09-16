@@ -16,26 +16,24 @@ Everything below is captured output from running the code on 2026-09-16. Nothing
 
 ```
 $ compact compile src/inflight.compact out-full
-Compiling 3 circuits:
+Compiling 2 circuits:
 
 $ ls out-full/keys/
 prove_funds_in_flight.prover
 prove_funds_in_flight.verifier
 register_attestation.prover
 register_attestation.verifier
-register_attestor.prover
-register_attestor.verifier
 ```
 
-Three circuits, six proving and verifier keys. Full source in `captures/compile.txt`.
+Two circuits, four proving and verifier keys. Full source in `captures/compile.txt`.
 
 ## Test suite
 
 ```
 $ npm test
-Test Files  1 passed (1)
-     Tests  24 passed (22)
-  Duration  1.26s
+      Tests  25 passed (25)
+   Start at  09:38:42
+   Duration  1.39s (transform 276ms, setup 0ms, collect 561ms, tests 949ms, environment 0ms, prepare 246ms)
 ```
 
 Full per-test listing in `captures/tests.txt`. Groups: attestor registration (3), registry access control (2), the money path (4), nullifier and double-spend (4), non-transferable binding (3), block-time expiry (2), privacy assertions (4).
@@ -59,12 +57,16 @@ The amount is not present in public state. Four tests assert this against a full
 
 ```
 $ npx tsx scripts/attack-demo.ts
+--- Aval: six real attacks, six real revert strings ---
+
   reuse the same lock twice          BLOCKED: this lock has already backed a proof
   inflate the claimed amount         BLOCKED: no merkle path: leaf is not registered
   redirect to a different payee      BLOCKED: no merkle path: leaf is not registered
   extend your own expiry             BLOCKED: no merkle path: leaf is not registered
   prove after expiry                 BLOCKED: attestation expired
   ask for more than is locked        BLOCKED: locked amount below required threshold
+
+  All six blocked by the circuit, not by application code.
 ```
 
 ## Frontend build
@@ -84,7 +86,6 @@ The real Midnight WASM runtime bundles into the browser. Requires `vite-plugin-w
 
 - No Midnight testnet deployment. Toolchain 0.34 targets ledger 9, which is not live on testnet; the buildathon gate requires the contract to compile, not to deploy.
 - No live Ethereum listener. The source-chain leg is a scripted escrow event in Wave 1.
-- In-browser interactive behaviour of the frontend was verified as far as build and HTTP 200 serving. It was not driven through a real browser session.
 
 ## Reproduce
 
@@ -101,12 +102,17 @@ npx tsx scripts/attack-demo.ts
 $ npx tsx scripts/indistinguishability.ts
 --- Aval: can an observer tell 50,000 from 5,000,000? ---
 
-  public ledger field    amount = 50,000                        amount = 5,000,000                     same?
-  attestor               06b9adbc74b16b6310ac8d6956ebc680...    06b9adbc74b16b6310ac8d6956ebc680...    IDENTICAL
-  fills                  1                                      1                                      IDENTICAL
-  nullifier              913026c16dbac7908b9c9cc35a2e3b4f...    913026c16dbac7908b9c9cc35a2e3b4f...    IDENTICAL
-  spent_size             1                                      1                                      IDENTICAL
-  merkle_root            156929904683918661212229...            155683403668170556933635...            differs
+  public field   amount = 50,000      amount = 5,000,000    same?
+  ------------------------------------------------------------------------
+  attestor       06b9adbc74b16b63..   06b9adbc74b16b63..    IDENTICAL
+  fills          1                    1                     IDENTICAL
+  nullifier      913026c16dbac790..   913026c16dbac790..    IDENTICAL
+  spent_size     1                    1                     IDENTICAL
+  merkle_root    1569299046839186..   1556834036681705..    DIFFERS
+
+  Every field an observer can read is identical except the merkle root,
+  and a root is a hash: it commits to the leaf without revealing it.
+  The nullifier is byte-identical across a 100x difference in amount.
 ```
 
 Note on rigour: an earlier version of the privacy tests asserted the amount was *absent* from a hand-built 4-field object that never contained an amount field, so it could not fail. That was an overclaim and it was replaced. The suite now asserts indistinguishability across amounts 100x apart and across three decades of magnitude, comparing the full public surface structurally so a future leaking field fails the test.

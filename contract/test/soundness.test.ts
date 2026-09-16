@@ -42,7 +42,10 @@ class Sim {
   addr = dummyContractAddress();
   static async make() {
     const s = new Sim();
-    const init = await s.contract.initialState(createConstructorContext<PS>({ secretKey: ATTESTOR, lock: REAL, evil: false }, '0'.repeat(64)));
+    const init = await s.contract.initialState(
+      createConstructorContext<PS>({ secretKey: ATTESTOR, lock: REAL, evil: false }, '0'.repeat(64)),
+      pureCircuits.derive_id(ATTESTOR),
+    );
     s.ctx = createCircuitContext<PS>('i', s.addr, '0'.repeat(64), init.currentContractState, init.currentPrivateState);
     return s;
   }
@@ -50,7 +53,6 @@ class Sim {
   private re(id: string, ps: PS, t: number) {
     this.ctx = createCircuitContext<PS>(id, this.addr, '0'.repeat(64), this.ctx.callContext.currentQueryContext.state, ps, undefined, undefined, undefined, t);
   }
-  async regAttestor() { this.re('register_attestor',{secretKey:ATTESTOR,lock:REAL,evil:false},1000); const r:any = await this.contract.impureCircuits.register_attestor(this.ctx); this.ctx=r.context; }
   async regAttestation(leaf: Uint8Array) { this.re('register_attestation',{secretKey:ATTESTOR,lock:REAL,evil:false},1000); const r:any = await this.contract.impureCircuits.register_attestation(this.ctx, leaf); this.ctx=r.context; }
   async prove(ps: PS, required: bigint, cp: Uint8Array, exp: bigint, t=1000) {
     this.re('prove_funds_in_flight', ps, t);
@@ -75,7 +77,6 @@ class Sim {
 describe('soundness: the merkle path must open the leaf the circuit recomputed', () => {
   it('rejects a forged proof that reuses a real attestation path for different terms', async () => {
     const s = await Sim.make();
-    await s.regAttestor();
     // attestor registers ONLY the honest 1-unit lock, payable to BOB, expiring at 9000
     await s.regAttestation(pureCircuits.leaf_hash(REAL.lockId, REAL.amount, BOB, EXPIRY, REAL.salt));
 

@@ -57,8 +57,11 @@ export class AvalSimulator {
 
   static async create(secretKey: Uint8Array): Promise<AvalSimulator> {
     const sim = new AvalSimulator(secretKey);
+    // The attestor is fixed AT DEPLOY, from the deployer's own key. There is no
+    // post-deploy bootstrap to front-run.
     const init = await sim.contract.initialState(
       createConstructorContext<AvalPrivateState>({ secretKey, lock: null }, '0'.repeat(64)),
+      pureCircuits.derive_id(secretKey),
     );
     sim.ctx = createCircuitContext<AvalPrivateState>(
       'init',
@@ -100,12 +103,6 @@ export class AvalSimulator {
     const out = await call();
     this.ctx = out.context;
     return out.result;
-  }
-
-  async registerAttestor(secretKey: Uint8Array, time = 1_000): Promise<void> {
-    await this.run('register_attestor', { secretKey, lock: null }, time, () =>
-      this.contract.impureCircuits.register_attestor(this.ctx) as any,
-    );
   }
 
   async registerAttestation(secretKey: Uint8Array, leaf: Uint8Array, time = 1_000): Promise<void> {

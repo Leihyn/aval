@@ -159,7 +159,7 @@ Copy `contract/test/inflight.test.ts` from **ARCHITECTURE.md Section 6**.
 npx vitest run
 ```
 
-Expected: `Tests  24 passed (22)`
+Expected: `Tests  25 passed (25)`
 
 Commit: `test: 24 passing simulator tests covering access control, nullifiers, binding, expiry, privacy`
 
@@ -167,7 +167,7 @@ Commit: `test: 24 passing simulator tests covering access control, nullifiers, b
 
 - [x] Runtime loads
 - [x] Simulator constructs a contract and reads public ledger state
-- [x] 24 tests pass
+- [x] 25 tests pass
 - [x] Privacy group asserts the amount is absent from a full public-state dump
 - [x] No Docker, no proof server, no wallet required
 
@@ -254,7 +254,7 @@ into `README.md` under `## Trust model`. The three things that must reach the RE
    bounds outstanding commitments; the attestor id identifies the deployment.
 
 Add to `README.md` `## What is NOT built`:
-- `register_attestor` is one-shot. No rotation, no revocation. A lost attestor key permanently bricks the registry.
+- The attestor is fixed by the constructor at deploy. No rotation, no revocation. A lost attestor key permanently bricks the registry. (An earlier permissionless `register_attestor()` let a stranger front-run the role; removed after an exploit proved it.)
 - The nullifier set is per-deployment, so cross-counterparty reuse is prevented by the beneficiary binding in the leaf, not by the nullifier.
 
 ### Task 2b.4: De-cluster the positioning  [E-5, approved]

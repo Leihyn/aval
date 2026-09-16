@@ -346,7 +346,7 @@ now correctly reads `Tests  24 passed (24)`.
 
 ---
 
-#### F-05 · The deck and the video both say 22, and both narrate three properties the circuit does not enforce
+#### F-05 · The deck and the video both display 22; the suite prints 24
 
 **Location:** `submission/video/render.py:151,153,155,156,239`; `submission/deck.py:94,176`
 **Effort:** E2 (regenerate capture + 6 string literals + re-run two scripts) · **Demo:** BLOCKS · **Submission:** WARNS
@@ -378,10 +378,11 @@ and Quality Assurance is 15% of the score.
 **Fix:** regenerate `submission/captures/tests.txt` from a real run, change the six string
 literals above, re-run `deck.py` and `render.py`. Everything else in the pipeline already works.
 
-Worse, Scene 5's narration (`PRD.md:502`) is: *"Inflate the amount: the leaf no longer matches.
-Point it at a different counterparty: same. Extend your own expiry: same."* All three are
-falsified by F-01. This is why F-01 is a demo blocker and not just a submission blocker —
-the video makes, out loud, three claims a judge can disprove with the repo they were handed.
+Scene 5's narration (`PRD.md:502`) is: *"Inflate the amount: the leaf no longer matches. Point
+it at a different counterparty: same. Extend your own expiry: same."* While F-01 was open all
+three were false, which made the video a demo blocker. **Since 06:45Z all three are true
+again** — so this is now the strongest thirty seconds in the video rather than its biggest
+liability. Lean on it in rehearsal.
 
 This is pipeline item **D-8**, raised by critique and never resolved: *"Decide explicitly:
 update docs only and leave the video saying 22, or re-render."* It is still undecided.
@@ -647,11 +648,13 @@ getting the length of your own video wrong is the cheapest possible credibility 
 
 | Severity | Count | Demo impact | Submission impact |
 |---|---|---|---|
-| P0 | 3 | 2 BLOCKS | 3 BLOCKS |
-| P1 | 6 | 1 BLOCKS, 2 WARNS | 6 WARNS |
-| P2 | 6 | 1 WARNS | 5 WARNS |
+| P0 — **1 of 2 closed during this phase** | 2 (F-01 RESOLVED, F-03 open) | — | 1 BLOCKS |
+| P1 | 6 | 3 WARNS | 6 WARNS |
+| P2 | 7 | 1 WARNS | 6 WARNS |
 | P3 | 8 | — | — |
-| **Total** | **23** | **3 BLOCKS, 3 WARNS** | **3 BLOCKS, 11 WARNS** |
+| **Total** | **23** (1 resolved) | **0 BLOCKS, 4 WARNS** | **1 BLOCKS, 12 WARNS** |
+
+F-02 moved P0 → P1 and F-01 closed once the leaf binding landed.
 
 **DEMO GATE: HAZARDS** (upgraded from BLOCKED at 06:45Z). The video's Scene 5 narration is
 true again now that F-01 is fixed. What remains is that the deck and the video both display
@@ -671,11 +674,11 @@ and re-verified against live artifacts at 06:45Z.
 
 ## Interview preparation
 
-> **Do F-01 first.** The answers to Q2 and Q3 below assume the leaf binding is in place. If
-> you walk into an interview with it unfixed and give the Q2 answer as written, you are
-> claiming three mechanisms, two of which a judge can disprove from the source you handed
-> them. If you cannot fix it in time, the only survivable version of Q2 is the one at the end
-> of that section marked **"if unfixed."**
+> **F-01 is fixed, so every answer below is now true.** Before the interview, re-run
+> `cd contract && npx vitest run` and confirm `contract/src/inflight.compact:141` still carries
+> the `path.leaf == leaf` assert. If that line is ever lost in a merge, the Q2 answer becomes a
+> claim a judge can disprove from the source you handed them — see the "if it is ever reverted"
+> variant at the end of Q2.
 
 ---
 
@@ -751,15 +754,22 @@ the closest construction): do not bluff that you have read them. Say *"I haven't
 if they've built the same three mechanisms then we converged, and the interesting question is
 what each of us bound into the leaf."*
 
-**If unfixed** — the only honest version:
+**Volunteer the near-miss.** This is a better answer than the clean one, because it shows you
+know *why* the three mechanisms are load-bearing:
 
-> "Designed, yes. Soundly implemented, not yet. I found this morning that I never bind the
-> witness-supplied Merkle path to the leaf I recompute, so two of those three mechanisms are
-> not actually enforced by the circuit today — only by the honest reference witness in my test
-> harness. It's a one-line assertion and I've verified the fix compiles and blocks the attack.
-> I'd rather tell you that than have you find it."
+> "One thing worth telling you, because it's the most interesting thing that happened to this
+> contract. Until this morning, two of those three weren't actually enforced. `find_path` is a
+> witness — it runs on the prover's machine — and I was passing the leaf into it as if that
+> bound the result. It doesn't; it's a hint. `merkleTreePathRoot` hashes `path.leaf`, and I
+> never asserted those were the same value. So a prover could borrow any registered leaf's path
+> and claim whatever amount, counterparty and expiry they liked. It's one line —
+> `assert(path.leaf == leaf)` — and it's in now, with a regression test that swaps in a hostile
+> witness rather than trusting my own honest one. I gather your `midnight-expert` repo patched
+> the same class in two example contracts a couple of weeks ago, which tracks: it's the sharpest
+> edge in the whole Compact witness model."
 
-That answer costs you points. It costs fewer than being caught.
+**If it is ever reverted:** say it plainly and early — *"designed, yes; soundly implemented,
+not right now"* — and name the one-line fix. That costs points. It costs fewer than being caught.
 
 ---
 
@@ -876,13 +886,13 @@ you learned something.*
 
 > "In order:
 >
-> **One. Bind the Merkle path to the leaf, and then write the test that would have caught it.**
-> Every one of my twenty-three tests uses a single honest `find_path` witness from my own
-> simulator. That proves the honest prover behaves. It proves nothing about a malicious one — and
-> a witness is, by definition, code the prover controls. What I'd add is an adversarial-witness
-> harness: for every witness in the contract, a test that swaps in a hostile implementation. That
-> is the class of test I didn't have, and it's the reason the bug survived twenty-three green
-> checks.
+> **One. Finish the job I started this morning: an adversarial-witness harness for every witness,
+> not just `find_path`.** All twenty-three of my tests used a single honest `find_path` from my own
+> simulator. That proves the honest prover behaves. It proves nothing about a malicious one — and a
+> witness is, by definition, code the prover controls. That is exactly how a real soundness bug
+> survived twenty-three green checks. I've added the one test that would have caught it; what I'd
+> build next is the pattern: for every witness the contract declares, a test that swaps in a hostile
+> implementation and asserts the circuit still holds.
 >
 > **Two.** Bind the attestor at construction so the bootstrap can't be front-run, and add rotation.
 >
@@ -898,8 +908,9 @@ you learned something.*
 > **Six.** Deploy. Install the container runtime, clear the disk, get through the faucet. It's
 > half a day and it closes the one gap I can't argue my way out of.
 >
-> The meta-answer is the first one. I was proud of having twenty-three passing tests and a test
-> suite is exactly as good as the adversary it models. Mine modelled a well-behaved user."
+> The meta-answer is the first one. I was proud of having twenty-three passing tests, and a test
+> suite is exactly as good as the adversary it models. Mine modelled a well-behaved user. It has
+> twenty-four now, and the twenty-fourth is the only one that ever tried to break in."
 
 ---
 
@@ -921,9 +932,9 @@ you learned something.*
 
 Ranked by how fast they'd find it and how much it costs.
 
-1. **F-01, the unbound Merkle path.** Minutes, for this audience specifically. Their own repo
-   fixed it eleven days ago; both nearest competitors have the assertion. Costs the Engineering
-   40% and takes the three-mechanism differentiation with it.
+1. ~~**F-01, the unbound Merkle path.**~~ **Closed 06:45Z.** Kept at the top because it is the
+   thing a judge would have found in minutes — their own repo fixed it eleven days ago and both
+   nearest competitors carry the assertion. Re-verify the line is still present before submitting.
 2. **F-03, `proof.md` "nothing is retyped" containing a retyped number.** Sixty seconds. Costs
    credibility across every other claim in the submission, which is expensive precisely because
    the submission's whole pitch is verifiability.
@@ -962,10 +973,11 @@ Ranked by how fast they'd find it and how much it costs.
 
 ### Questions that currently have no good answer
 
-1. **"Show me a test where the prover supplies a hostile witness."** There isn't one. All 23
-   tests share `simulator.ts`'s single honest `find_path`. This is the root cause of F-01
-   surviving to submission, and there is no way to answer it except to say so. It is also the
-   best thing you can say in Q6.
+1. ~~**"Show me a test where the prover supplies a hostile witness."**~~ **Answered at 06:45Z** —
+   `contract/test/soundness.test.ts`. It was the absence of exactly this test that let F-01 survive
+   23 green checks, which makes it the best thing you can say in Q6. The residue: it covers
+   `find_path` only. `local_secret_key`, `get_lock_id`, `get_amount` and `get_salt` are all still
+   modelled solely by the honest simulator. Be ready to say that before a judge finds it.
 2. ~~**"Has anyone loaded your frontend in a browser and clicked prove?"**~~ **Answered during
    this audit — say yes.** Headless Chromium, WASM instantiates, boot reaches `ready`, prove
    moves `fills` to 1, zero console errors, and the privacy pane's failure mode was tested by
@@ -983,19 +995,29 @@ Ranked by how fast they'd find it and how much it costs.
 
 ---
 
-## Recommended order of work, with 9 hours on the clock
+## Recommended order of work, with 8h 10m on the clock (06:50Z)
 
-1. **F-01** — one line, verified to compile and to block the attack. 15 minutes including a
-   regression test. Do this even if you do nothing else.
-2. **F-02, F-03, F-04** — the three falsifiable honesty strings. Regenerate
-   `submission/captures/tests.txt` from a real run so `proof.md` stops contradicting its own
-   pointer. 30 minutes.
-3. **F-05** — decide the video explicitly. Either re-render, or add one line to the README
-   saying the video predates the 23rd test. Do not leave it undecided a third time.
-4. **F-07** — two rows added to two tables. 10 minutes, and it strengthens your Q1 answer.
-5. **F-06, F-10** — if F-01 lands early. Both are also good interview material unfixed, as long
-   as you volunteer them.
-6. **F-14** — commit and push before you submit. The judge sees `origin/main`.
+0. ~~**F-01**~~ — done at 06:45Z. Re-run `npx vitest run` (expect `24 passed (24)`) and confirm
+   `inflight.compact:141` still holds the assert. Two minutes.
+1. **F-03 + F-04 — six lines, ten minutes, and this is now the only submission blocker.**
+   `README.md:11`, `README.md:154`, `submission/proof.md:37`, `submission/proof.md:41`,
+   `ARCHITECTURE.md:114`, `PLAN.md:162`. Delete `proof.md:87` (it contradicts `:114-127`). Fix
+   `PLAN.md:162` first or the next sweep produces `25 passed (22)`.
+2. **F-15** — two numbers in `links.md`: the video is 141s not 112s, the deck is 11 slides not 9.
+   One minute.
+3. **F-05** — six string literals in `submission/deck.py` and `submission/video/render.py`, then
+   re-run both. `captures/tests.txt` is already regenerated, so the pipeline will pick up the
+   right numbers. If you will not re-render, say so in one README line rather than leaving it
+   undecided a third time.
+4. **F-02** — give `attack-demo.ts` the hostile witness from `soundness.test.ts`. Twenty minutes,
+   and it converts your weakest demo artifact into your strongest.
+5. **F-07** — two rows added to two tables. Ten minutes, and it strengthens your Q1 answer.
+6. **F-14** — commit and push everything under `submission/` before you submit, including
+   `submission/screenshots/`, which `proof.md:127` already links to. The judge sees `origin/main`.
+   Then open the raw links from a logged-out window.
+7. **F-06, F-10** — leave them. Both are better interview material than patch material at this
+   hour, as long as you volunteer them rather than waiting to be asked.
 
-Items 1 through 4 are roughly 90 minutes and they move the submission from "a judge can
-disprove three of its claims" to "a judge can verify all of them."
+Items 1, 2 and 6 are about fifteen minutes total and they clear the submission gate. Items 3
+through 5 are another hour and a half and they move the submission from "a judge can find three
+numbers that disagree" to "every claim in it checks out."

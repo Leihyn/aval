@@ -82,7 +82,7 @@ aval/
 │   │   └── keys/*.prover|.verifier
 │   ├── test/
 │   │   ├── simulator.ts               # in-process harness
-│   │   └── inflight.test.ts           # 24 tests
+│   │   └── inflight.test.ts           # 25 tests
 │   ├── src-ts/
 │   │   ├── watcher.ts                 # attestor: source chain -> Midnight
 │   │   └── types.ts                   # shared types
@@ -108,7 +108,7 @@ aval/
 
 | Name | Type | File path | Purpose | Dependencies |
 |---|---|---|---|---|
-| Aval contract | Compact | `contract/src/inflight.compact` | 3 circuits, the protocol | CompactStandardLibrary |
+| Aval contract | Compact | `contract/src/inflight.compact` | 2 circuits, the protocol | CompactStandardLibrary |
 | Shared types | TS | `contract/src-ts/types.ts` | `LockRecord`, `AvalPrivateState` | none |
 | Simulator | TS | `contract/test/simulator.ts` | Run circuits in-process, inject block time | compact-runtime, compiled output |
 | Test suite | TS | `contract/test/inflight.test.ts` | 22 security + privacy tests | simulator |
@@ -143,7 +143,7 @@ The complete protocol. Three circuits: bootstrap an attestor, register a lock co
 
 **Why no ECDSA.** The obvious design verifies an attestor's Ethereum signature inside the circuit. That is impossible here: `Secp256k1Point`, `Secp256k1Scalar`, `Secp256k1Base` and `secp256k1EcdsaVerify` are all UNBOUND in the shipped 0.34.0 standard library, despite the release notes describing them. Verified by compiling a probe. Authority therefore comes from *writing to the ledger*, authenticated by Midnight's own transaction layer, plus a derived-id equality check. This is also strictly more private: a signature check would force Alice to reveal which attestation she used.
 
-**Why counterparty and expiry are bound into the leaf.** Both are public circuit arguments, but hashing them into the commitment is what makes an attestation non-transferable. Change either and the recomputed leaf matches nothing in the tree. Three of the 24 tests assert exactly this.
+**Why counterparty and expiry are bound into the leaf.** Both are public circuit arguments, but hashing them into the commitment is what makes an attestation non-transferable. Change either and the recomputed leaf matches nothing in the tree. Three of the 25 tests assert exactly this.
 
 **Why `kernel.blockTimeLessThan` and not a caller-supplied timestamp.** A `now` parameter would let the prover backdate. The ledger's own block time cannot be forged by the caller.
 
@@ -152,29 +152,50 @@ The complete protocol. Three circuits: bootstrap an attestor, register a lock co
 ### Code
 
 #### File: `contract/src/inflight.compact`
-`[VERIFIED]`, compiles to 3 circuits and 6 proving/verifier keys in 14.5s. Source: executed on this machine.
+`[VERIFIED]`, compiles to 2 circuits and 4 proving/verifier keys in 14.5s. Source: executed on this machine.
 
 ```compact
 pragma language_version >= 0.26;
 
 // Aval, proof of funds in flight.
 //
+// A party (Alice) locks funds in an escrow on a source chain. The lock is real,
+// irrevocable, and uniquely identified, but a Midnight contract cannot see another
+// chain. An attestor that CAN see the source chain registers a commitment to the
+// lock here. Alice then proves, in zero knowledge, that she holds a preimage of a
+// registered commitment whose amount clears a threshold, without revealing the
+// amount, the lock id, or which attestation she used.
+//
 // DUAL-LEDGER SUMMARY
 //   Private (witness, never written):  lock_id, amount, salt, merkle path
 //   Public  (ledger, written):         merkle root, nullifier, fill counter, attestor id
-//   Bridged by disclose():             6 call sites, each justified inline.
+//   Bridged by disclose():             8 call sites, each justified inline.
 //
 // Note on disclose(): it does not itself publish anything. It clears the compiler's
 // private-data check so a value may cross into a public position; the ledger write is
-// what makes it visible.
+// what makes it visible. Every disclose() below is annotated with what an observer
+// actually learns.
 
 import CompactStandardLibrary;
 
+// ─────────────────────────────── Public ledger ───────────────────────────────
+
+// Commitments to source-chain locks, registered by the attestor.
+// Historic tree: a proof stays valid against an older root as the tree grows,
+// so Alice's proof does not break when another attestation is added mid-flight.
 export ledger attestations: HistoricMerkleTree<10, Bytes<32>>;
+
+// Spent nullifiers. One registered lock can back exactly one proof, ever.
 export ledger spent: Set<Bytes<32>>;
+
+// The attestor's derived public identifier.
 export ledger attestor: Bytes<32>;
 export ledger attestor_registered: Boolean;
+
+// Count of successful proofs. Public, aggregate, reveals no individual amount.
 export ledger fills: Counter;
+
+// ──────────────────────────────── Private state ──────────────────────────────
 
 witness local_secret_key(): Bytes<32>;
 witness get_lock_id(): Bytes<32>;
@@ -182,10 +203,31 @@ witness get_amount(): Uint<64>;
 witness get_salt(): Bytes<32>;
 witness find_path(leaf: Bytes<32>): MerkleTreePath<10, Bytes<32>>;
 
+// ──────────────────────────────── Constructor ────────────────────────────────
+
+// The attestor is fixed at DEPLOY time, not claimed afterwards by whoever calls
+// first. An earlier version exposed a permissionless `register_attestor()`, which
+// let a stranger front-run the bootstrap, install their own id, and permanently
+// brick the deployment: the real operator could neither re-register nor write the
+// registry, and no rotation circuit existed. Verified by exploit before this change.
+constructor(initial_attestor: Bytes<32>) {
+  attestor = disclose(initial_attestor);
+  attestor_registered = true;
+}
+
+// ────────────────────────────── Pure helpers ─────────────────────────────────
+
+// Domain-separated identity derivation. Same pattern as the attestor id.
 export pure circuit derive_id(sk: Bytes<32>): Bytes<32> {
   return persistentHash<Vector<2, Bytes<32>>>([pad(32, "aval:attestor:v1"), sk]);
 }
 
+// The commitment an attestor registers for one source-chain lock.
+//
+// counterparty and expiry are bound INTO the leaf even though both are public
+// circuit arguments. That binding is what stops Alice replaying an attestation
+// issued for Bob against a different counterparty, or past its expiry: change
+// either value and the recomputed leaf no longer matches any registered leaf.
 export pure circuit leaf_hash(
   lock_id: Bytes<32>,
   amount: Uint<64>,
@@ -198,27 +240,37 @@ export pure circuit leaf_hash(
   return persistentHash<Vector<3, Bytes<32>>>([inner, counterparty, expiry_b]);
 }
 
+// Nullifier for a registered lock. Derived from the PRIVATE lock_id and salt, so
+// it is unlinkable to the leaf by an observer, yet deterministic for the holder.
 export pure circuit nullifier_of(lock_id: Bytes<32>, salt: Bytes<32>): Bytes<32> {
   return persistentHash<Vector<3, Bytes<32>>>([pad(32, "aval:nul:v1"), lock_id, salt]);
 }
 
-export circuit register_attestor(): [] {
-  assert(!attestor_registered, "attestor already registered");
-  const id = derive_id(local_secret_key());
-  // DISCLOSE 1/6, publishes the attestor's derived public id. The secret key never leaves witness state.
-  attestor = disclose(id);
-  attestor_registered = true;
-}
+// ──────────────────────────────── Circuits ───────────────────────────────────
 
+// Register a commitment to an observed source-chain lock. Attestor-only.
+//
+// Note: Compact treats even exported-circuit PARAMETERS as private until disclosed,
+// not just witnesses. A caller supplies arguments inside the proof, so nothing is
+// public until an explicit disclose() puts it there. `leaf` therefore needs one.
 export circuit register_attestation(leaf: Bytes<32>): [] {
   assert(attestor_registered, "no attestor registered");
   const id = derive_id(local_secret_key());
-  // DISCLOSE 2/6, publishes only the BOOLEAN "caller is the attestor". One bit, and it is the access decision itself.
+  // DISCLOSE 2/6, publishes only the BOOLEAN "caller is the attestor", not the
+  // caller's key. A single bit, and it is the access-control decision itself.
   assert(disclose(id == attestor), "caller is not the attestor");
-  // DISCLOSE 3/6, publishes the commitment. A leaf is a hash: no amount, no lock id, no counterparty.
+  // DISCLOSE 3/6, publishes the commitment itself. Intended: the registry of
+  // outstanding lock commitments is public by design. A leaf is a hash, so it
+  // reveals no amount, no lock id, and no counterparty on its own.
   attestations.insert(disclose(leaf));
 }
 
+// The money circuit. Prove a registered lock clears `required` for `counterparty`
+// and has not expired, without revealing the amount or which lock it was.
+//
+// Public args are deliberately public: `required` is the counterparty's own
+// threshold, `counterparty` is who is being paid, `expiry` is not sensitive.
+// The amount and lock identity stay private.
 export circuit prove_funds_in_flight(
   required: Uint<64>,
   counterparty: Bytes<32>,
@@ -231,20 +283,41 @@ export circuit prove_funds_in_flight(
   const leaf = leaf_hash(lock_id, amount, counterparty, expiry, salt);
   const path = find_path(leaf);
 
-  // DISCLOSE (root), publishes the ROOT computed from the private path, not the path and
-  // not the leaf. The root is already public state. Critically it does NOT reveal WHICH leaf
-  // was used, so the proof stays unlinkable to a specific attestation.
+  // BIND THE PATH TO THE LEAF. This line is the difference between a sound
+  // contract and a forgeable one.
+  //
+  // find_path is a WITNESS: it runs on the prover's own machine and is not
+  // cryptographically verified. Passing `leaf` into it is a hint, not a
+  // constraint. merkleTreePathRoot hashes path.leaf, so without this assert a
+  // malicious prover returns the path of some OTHER genuinely-registered leaf
+  // while the circuit's amount, counterparty and expiry checks run against
+  // values the attestor never authorised. Verified by exploit: a proof claiming
+  // 2^64-1 units to the wrong counterparty, past expiry, was ACCEPTED against a
+  // real 1-unit attestation, and left the honest lock's nullifier unspent.
+  assert(disclose(path.leaf == leaf), "merkle path does not open the claimed leaf");
+
+  // DISCLOSE (root), publishes the Merkle ROOT computed from the private path, not
+  // the path and not the leaf. The root is already public ledger state, so this
+  // reveals nothing new. Critically it does NOT reveal WHICH leaf was used, so the
+  // proof is unlinkable to a specific registered attestation.
   const root = disclose(merkleTreePathRoot<10, Bytes<32>>(path));
   assert(attestations.checkRoot(root), "attestation not registered");
 
-  // DISCLOSE 4/6, publishes the expiry bound. Not sensitive, and bound into the leaf so the
-  // prover cannot alter it without invalidating the Merkle proof.
+  // Real on-chain expiry. Enforced by the ledger's own block time, not by a
+  // timestamp the caller passes in, so the prover cannot backdate it.
+  // DISCLOSE 4/6, publishes the expiry bound being checked. Deliberate: expiry is
+  // not sensitive, and it is bound into the leaf, so the prover cannot alter it
+  // without invalidating the Merkle proof.
   assert(kernel.blockTimeLessThan(disclose(expiry)), "attestation expired");
 
-  // DISCLOSE 5/6, publishes only the BOOLEAN "amount >= required". The amount is never written.
+  // DISCLOSE 5/6, publishes only the BOOLEAN "amount >= required". The amount
+  // itself is never written. An observer learns the threshold was cleared and
+  // nothing more.
   assert(disclose(amount >= required), "locked amount below required threshold");
 
-  // DISCLOSE 6/6, publishes the nullifier: a one-way hash of private lock_id and salt.
+  // DISCLOSE 6/6, publishes the nullifier. It is a domain-separated hash of the
+  // private lock_id and salt, so it is one-way and unlinkable to the leaf, but
+  // stable enough to make double-spending the same lock impossible.
   const nul = disclose(nullifier_of(lock_id, salt));
   assert(!spent.member(nul), "this lock has already backed a proof");
   spent.insert(nul);
@@ -255,7 +328,7 @@ export circuit prove_funds_in_flight(
 
 ### Verified status
 
-Compiles clean. Generates `register_attestor.zkir`, `register_attestation.zkir`, `prove_funds_in_flight.zkir` plus six keys. The compiler's information-flow analysis rejected three earlier drafts that let a witness reach the ledger without `disclose()`, which is the dual-ledger model being enforced by the type system rather than by developer discipline.
+Compiles clean. Generates `register_attestation.zkir` and `prove_funds_in_flight.zkir` plus four keys, with the attestor fixed by the constructor. The compiler's information-flow analysis rejected three earlier drafts that let a witness reach the ledger without `disclose()`, which is the dual-ledger model being enforced by the type system rather than by developer discipline.
 
 ---
 
@@ -314,7 +387,7 @@ The witness `find_path` reads the PUBLIC tree via `ctx.ledger.attestations.findP
 ### Code
 
 #### File: `contract/test/simulator.ts`
-`[VERIFIED]`, executed; 24 tests pass against it.
+`[VERIFIED]`, executed; 25 tests pass against it.
 
 See the file on disk. Its exported surface, which everything else depends on:
 
@@ -352,7 +425,7 @@ Prove the security properties mechanically, and prove the privacy property by as
 ### Code
 
 #### File: `contract/test/inflight.test.ts`
-`[VERIFIED]`, 24 tests, all passing, 671ms.
+`[VERIFIED]`, 25 tests, all passing, 671ms.
 
 Structure (full source on disk):
 
@@ -829,8 +902,8 @@ Wave 1 deliberately requires **zero credentials**. A judge clones and runs. The 
 
 | What | File | Command | Status |
 |---|---|---|---|
-| Contract compiles | `contract/src/inflight.compact` | `compact compile src/inflight.compact out` | PASSING, 3 circuits |
-| Full compile with keys | same | `compact compile src/inflight.compact out-full` | PASSING, 6 keys, 14.5s |
+| Contract compiles | `contract/src/inflight.compact` | `compact compile src/inflight.compact out` | PASSING, 2 circuits |
+| Full compile with keys | same | `compact compile src/inflight.compact out-full` | PASSING, 4 keys, 14.5s |
 | Unit + security + privacy | `contract/test/inflight.test.ts` | `npm test` | PASSING, 24/24 |
 | Seed script | `contract/scripts/seed-demo.ts` | `npx tsx scripts/seed-demo.ts` | not yet run |
 | Frontend build | `frontend/` | `npm run build` | not yet run |

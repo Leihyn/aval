@@ -22,8 +22,6 @@ const LOCKS: LockedEvent[] = [
 
 export async function seed() {
   const sim = await AvalSimulator.create(ATTESTOR);
-  await sim.registerAttestor(ATTESTOR, NOW);
-
   const attestations = [];
   for (const event of LOCKS) {
     attestations.push(await attestLock(sim, ATTESTOR, event, bytes32(`salt-${event.amount}`)));

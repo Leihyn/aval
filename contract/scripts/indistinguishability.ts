@@ -10,7 +10,6 @@ const EXPIRY = 9_000n;
 
 const run = async (amount: bigint) => {
   const s = await AvalSimulator.create(ATTESTOR);
-  await s.registerAttestor(ATTESTOR, 1_000);
   const l = { lockId: bytes32('lock-1'), amount, salt: bytes32('salt-lock-1') };
   await s.registerAttestation(ATTESTOR, leafFor(l, BOB, EXPIRY), 1_000);
   await s.proveFundsInFlight({ secretKey: ALICE, lock: l, required: 1_000n, counterparty: BOB, expiry: EXPIRY, time: 1_000 });

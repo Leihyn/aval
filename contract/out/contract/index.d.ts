@@ -14,7 +14,6 @@ export type Witnesses<PS> = {
 }
 
 export type ImpureCircuits<PS> = {
-  register_attestor(context: __compactRuntime.CircuitContext<PS>): Promise<__compactRuntime.CircuitResults<PS, []>>;
   register_attestation(context: __compactRuntime.CircuitContext<PS>,
                        leaf_0: Uint8Array): Promise<__compactRuntime.CircuitResults<PS, []>>;
   prove_funds_in_flight(context: __compactRuntime.CircuitContext<PS>,
@@ -24,7 +23,6 @@ export type ImpureCircuits<PS> = {
 }
 
 export type ProvableCircuits<PS> = {
-  register_attestor(context: __compactRuntime.CircuitContext<PS>): Promise<__compactRuntime.CircuitResults<PS, []>>;
   register_attestation(context: __compactRuntime.CircuitContext<PS>,
                        leaf_0: Uint8Array): Promise<__compactRuntime.CircuitResults<PS, []>>;
   prove_funds_in_flight(context: __compactRuntime.CircuitContext<PS>,
@@ -54,7 +52,6 @@ export type Circuits<PS> = {
   nullifier_of(context: __compactRuntime.CircuitContext<PS>,
                lock_id_0: Uint8Array,
                salt_0: Uint8Array): Promise<__compactRuntime.CircuitResults<PS, Uint8Array>>;
-  register_attestor(context: __compactRuntime.CircuitContext<PS>): Promise<__compactRuntime.CircuitResults<PS, []>>;
   register_attestation(context: __compactRuntime.CircuitContext<PS>,
                        leaf_0: Uint8Array): Promise<__compactRuntime.CircuitResults<PS, []>>;
   prove_funds_in_flight(context: __compactRuntime.CircuitContext<PS>,
@@ -94,7 +91,8 @@ export declare class Contract<PS = any, W extends Witnesses<PS> = Witnesses<PS>>
   impureCircuits: ImpureCircuits<PS>;
   provableCircuits: ProvableCircuits<PS>;
   constructor(witnesses: W);
-  initialState(context: __compactRuntime.ConstructorContext<PS>): Promise<__compactRuntime.ConstructorResult<PS>>;
+  initialState(context: __compactRuntime.ConstructorContext<PS>,
+               initial_attestor_0: Uint8Array): Promise<__compactRuntime.ConstructorResult<PS>>;
 }
 
 export declare function ledger(state: __compactRuntime.StateValue | __compactRuntime.ChargedState): Ledger;

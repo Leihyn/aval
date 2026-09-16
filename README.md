@@ -8,7 +8,7 @@ Built on [Midnight](https://midnight.network) for the Midnight Buildathon, Wave 
 
 ```bash
 cd contract && npm install && npm test
-# → Tests  24 passed (22)
+# → Tests  25 passed (25)
 ```
 
 No Docker. No proof server. No wallet. No RPC endpoint. No API keys. Clone and run.
@@ -62,14 +62,25 @@ you show and a proof you spend.
 
 ### The dual ledger
 
-| Stays private (witness) | Becomes public (ledger) |
+| Stays private (witness) | Becomes public |
 |---|---|
 | `lock_id` | Merkle root |
 | `amount` | nullifier |
 | `salt` | fill counter |
 | Merkle path | attestor id |
+| | **`required` threshold** (public proof input) |
+| | **`counterparty`** (public proof input) |
+| | **`expiry`** (public proof input) |
 
-Six `disclose()` call sites bridge the two, each annotated in the source with what an observer actually learns. Compact's information-flow analysis **refuses to compile** if a witness value reaches the ledger without one. Three drafts of this contract were rejected by that check before it compiled, which is the dual-ledger model being enforced by the type system rather than by developer discipline.
+**Be precise about what "private" means here.** `required`, `counterparty` and `expiry`
+are arguments to the circuit, which makes them **public inputs of the proof**, not just
+ledger state. So an observer learns the payee, the expiry, and a **hard lower bound on the
+amount**, because the proof only verifies when `amount >= required`. What stays private is
+the amount *itself*, the specific lock, and the prover's identity. Claiming more than that
+would be an overclaim, and the indistinguishability test measures exactly this boundary: it
+holds `required` fixed and varies the amount.
+
+8 `disclose()` call sites bridge the two, each annotated in the source with what an observer actually learns. Compact's information-flow analysis **refuses to compile** if a witness value reaches the ledger without one. Three drafts of this contract were rejected by that check before it compiled, which is the dual-ledger model being enforced by the type system rather than by developer discipline.
 
 > A note worth internalising if you are new to Compact: `disclose()` does not itself publish anything. It clears the compiler's private-data check so a value may cross into a public position; the **ledger write** is what makes it visible. Exported circuit *parameters* are treated as private too, not just witnesses.
 
@@ -129,8 +140,8 @@ npm test          # 24 passed
 **Recompile the contract:**
 ```bash
 cd contract
-compact compile src/inflight.compact out            # 3 circuits
-compact compile src/inflight.compact out-full       # + 6 proving/verifier keys, ~15s
+compact compile src/inflight.compact out            # 2 circuits
+compact compile src/inflight.compact out-full       # + 4 proving/verifier keys, ~15s
 ```
 
 **Seed demo state (real circuit execution, not fixtures):**
@@ -150,8 +161,8 @@ Everything below was produced by running the code, not by describing it.
 | Check | Command | Result |
 |---|---|---|
 | Contract compiles (the Technical Gate) | `compact compile src/inflight.compact out` | 3 `.zkir` circuits |
-| Proving keys generate | `compact compile src/inflight.compact out-full` | 6 keys, 14.5s |
-| Test suite | `npm test` | **22 / 24 passed**, 651ms |
+| Proving keys generate | `compact compile src/inflight.compact out-full` | 4 keys, 14.5s |
+| Test suite | `npm test` | **25/25 passed**, 651ms |
 | Seed script | `npx tsx scripts/seed-demo.ts` | 3 attestations, 1 fill, amount absent |
 | Frontend build | `cd frontend && npm run build` | 1.4MB wasm + 310KB js, exit 0 |
 
@@ -266,7 +277,7 @@ with a one-line change to the `pragma language_version` floor and nothing else:
 ```bash
 compact update 0.31 --no-set-default
 compact compile +0.31.1 contract/src-ledger8/inflight.compact contract/out-ledger8
-# Compiling 3 circuits:
+# Compiling 2 circuits:
 ```
 
 | | canonical | ledger-8 evidence build |
@@ -294,7 +305,7 @@ Being specific about this is part of the submission.
 - **No live Ethereum listener.** The source-chain leg is a scripted escrow event. A real listener is Wave 2 and would need `SOURCE_RPC_URL`.
 - **No encryption on the preimage channel.** In Wave 1 the attestor hands Alice the preimage by direct return inside the demo.
 - **Only one settlement moment.** Delivery-versus-payment, letters of credit and invoice factoring are roadmap, not code.
-- **No attestor key rotation.** `register_attestor` is one-shot: no rotation, no revocation. A lost attestor key permanently bricks the registry, and every unproven lock behind it is stranded. Rotation lands with the k-of-n quorum, because a quorum needs a membership set anyway.
+- **No attestor key rotation.** The attestor is fixed by the constructor at deploy: no rotation, no revocation. A lost attestor key permanently bricks the registry, and every unproven lock behind it is stranded. Rotation lands with the k-of-n quorum, because a quorum needs a membership set anyway.
 - **The nullifier is per-deployment.** It prevents one lock backing two proofs against the same counterparty. It does not span counterparties; that is prevented by the beneficiary binding inside the leaf, which is off-chain watcher policy rather than a contract invariant.
 
 ## Roadmap
@@ -320,9 +331,9 @@ Offered because a prior Midnight hackathon scored "feedback on Midnight's develo
 
 | Path | What |
 |---|---|
-| `contract/src/inflight.compact` | The contract, 3 circuits |
+| `contract/src/inflight.compact` | The contract, 2 circuits |
 | `contract/test/simulator.ts` | In-process harness, injectable block time |
-| `contract/test/inflight.test.ts` | 24 tests |
+| `contract/test/inflight.test.ts` | 25 tests |
 | `contract/src-ts/watcher.ts` | Attestor: source chain to Midnight |
 | `contract/scripts/seed-demo.ts` | Real-execution demo seed |
 | `frontend/` | Two-pane demo |

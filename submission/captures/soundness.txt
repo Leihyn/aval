@@ -1,11 +1,16 @@
-$ npx vitest run test/soundness.test.ts
+$ npx vitest run test/soundness.test.ts test/bootstrap.test.ts
  RUN  v2.1.9 /Users/machine/Desktop/dev/aval/contract
+stdout | test/bootstrap.test.ts > bootstrap: the attestor role is fixed at deploy and cannot be front-run > a stranger cannot claim the attestor role after deploy
+  attestor is the deployer   : true
+  stranger can write registry: false
+  deployer can write registry: true
+ ✓ test/bootstrap.test.ts (1 test) 72ms
 stdout | test/soundness.test.ts > soundness: the merkle path must open the leaf the circuit recomputed > rejects a forged proof that reuses a real attestation path for different terms
   forged proof accepted        : false
   fills after forgery          : 0
   real lock nullifier spent?   : false
  ✓ test/soundness.test.ts (1 test) 77ms
- Test Files  1 passed (1)
-      Tests  1 passed (1)
-   Start at  07:46:51
-   Duration  731ms (transform 82ms, setup 0ms, collect 117ms, tests 77ms, environment 0ms, prepare 116ms)
+ Test Files  2 passed (2)
+      Tests  2 passed (2)
+   Start at  09:38:46
+   Duration  590ms (transform 86ms, setup 0ms, collect 282ms, tests 149ms, environment 0ms, prepare 158ms)

@@ -1,0 +1,111 @@
+{
+  "status": "complete_with_blockers",
+  "mode": "DEEP",
+  "autonomous_mode": true,
+  "personas_run": 21,
+  "personas_total": 23,
+  "dispatch_note": "Bespoke dispatch: four parallel adversarial lenses (contract soundness, honesty/claim-vs-code, judge-simulation/competitive, demo-reliability/UX) plus direct contract analysis with three runnable PoCs, rather than the canonical 23-persona roster. Caller named six priority interview questions. P13 (traction) and P17 (code quality) received spot coverage only. Per-persona working files kept in the session scratchpad, not written into the repo, because .interrogate-* is not gitignored and the repo ships to judges today.",
+  "findings": {
+    "total": 23,
+    "P0": 2,
+    "P1": 6,
+    "P2": 7,
+    "P3": 8,
+    "resolved_during_phase": 1,
+    "unverified": 0
+  },
+  "gate_status": {
+    "demo_gate": "HAZARDS",
+    "submission_gate": "BLOCKED"
+  },
+  "submission_blockers": [
+    {
+      "id": "F-03",
+      "title": "submission/proof.md falsifies its own opening promise, and now self-contradicts",
+      "persona": "P9 Honesty Cop",
+      "check_id": "9.1",
+      "location": "submission/proof.md:3 vs :37, :41, :56, :87",
+      "fix_guidance": "proof.md:3 promises 'Nothing is retyped'; :37 prints 'Tests  24 passed (22)', a string no run has produced (actual: 24 passed (24)); :41's per-group breakdown sums to a different total than :37 claims; :87 says the frontend 'was not driven through a real browser session' while :114-127 is a section titled 'Verified in a real browser'. Paste the real vitest line, recompute the group sums, delete line 87."
+    }
+  ],
+  "demo_hazards": [
+    {
+      "title": "Deck and video both display 22 tests; the suite prints 24",
+      "id": "F-05",
+      "impact": "WARNS",
+      "location": "submission/deck.py:94,176; submission/video/render.py:151,155,156,239",
+      "fix_guidance": "Both pipelines rasterize submission/captures/tests.txt onto the slide/frame, so the number cannot be text-patched — pdftotext extracts zero text from the deck. captures/tests.txt was already regenerated to 24. Change the six string literals and re-run deck.py and render.py. Both artifacts were re-rendered at 06:41Z with the fix available and not applied."
+    },
+    {
+      "title": "links.md misstates both artifacts it describes",
+      "id": "F-15",
+      "impact": "WARNS",
+      "location": "submission/links.md:6-7",
+      "fix_guidance": "Says the video is 112s (ffprobe: 141.0s) and the deck is 9 slides (pdfinfo: 11 pages). Both drifted when the artifacts were re-rendered at 06:41Z. Two numbers."
+    },
+    {
+      "title": "attack-demo.ts claims the circuit blocks attacks the test harness blocks",
+      "id": "F-02",
+      "impact": "WARNS",
+      "location": "contract/scripts/attack-demo.ts:59",
+      "fix_guidance": "Prints 'All six blocked by the circuit, not by application code.' Three of the six emit 'no merkle path: leaf is not registered', which is thrown by test/simulator.ts:43, not by any contract assert. Now that F-01 is fixed, give those three cases the hostile find_path from test/soundness.test.ts and the output becomes a real circuit assert."
+    },
+    {
+      "title": "Judge-facing submission artifacts are unpushed",
+      "id": "F-14",
+      "impact": "WARNS",
+      "location": "submission/ (deck, video, screenshots/, slide-11.png, video/ui-panes.png)",
+      "fix_guidance": "proof.md:127 links submission/screenshots/ui-initial.png and ui-after-proof.png, which are untracked — a 404 for anyone but this machine. Commit and push everything under submission/, then re-open the raw links logged out."
+    }
+  ],
+  "resolved_during_phase": [
+    {
+      "id": "F-01",
+      "title": "prove_funds_in_flight never bound the witness-supplied merkle path to the recomputed leaf",
+      "severity_was": "P0",
+      "resolved_at": "2026-09-16T06:45:00Z",
+      "resolved_by": "concurrent agent, after this phase's PoC and report",
+      "fix": "contract/src/inflight.compact:141 — assert(disclose(path.leaf == leaf), \"merkle path does not open the claimed leaf\");",
+      "verification": "Re-verified by this phase at 06:45Z against live artifacts: compiled output contains the assert; out/ and out-ledger8/ both regenerated; src-ledger8 still differs from src by exactly the one pragma line; the exploit PoC now returns 'rejected: failed assert: merkle path does not open the claimed leaf' with fills 0n->0n and spent 0n->0n; npx vitest run returns 'Tests 24 passed (24)'; a genuine adversarial-witness regression test exists at contract/test/soundness.test.ts.",
+      "external_context": "midnightntwrk/midnight-expert PR #239 'Bind the Merkle path's leaf to the caller's commitment in two examples' merged 2026-09-05T13:19:36Z (verified via GitHub API). Competitors OoJae/onepledge (registry.compact:176,199) and ceciliagalvaoo/Attesta (attesta.compact:251,333) already carried the assertion."
+    }
+  ],
+  "verified_solid": [
+    "npx vitest run -> Tests 24 passed (24), 2 files, 1.44s",
+    "compact compile -> 3 .zkir; full compile -> 6 proving/verifier keys in 11.8s",
+    "committed contract/out/zkir/*.zkir byte-identical to a fresh compile of src/inflight.compact",
+    "ledger-8 claim true: src vs src-ledger8 differ by exactly one pragma line; out-ledger8/zkir holds 3 .zkir",
+    "GitHub gate green: private:false, Apache-2.0, midnightntwrk topic, README/LICENSE/contract raw all HTTP 200, nothing unpushed on main at 05:43Z",
+    "zero secret-pattern hits and zero env-var references across 68 tracked files",
+    "salt entropy real: crypto.getRandomValues in contract/src-ts/watcher.ts:12",
+    "frontend runs in real headless Chromium: WASM instantiates, boot ready, fills 0->1, zero console errors (D-4 settled positive)",
+    "frontend is not a mock: imports the compiled contract; zero hardcoded ledger JSON in frontend/src",
+    "frontend build exit 0, no node: builtins and no require( in the bundle"
+  ],
+  "open_questions_with_no_good_answer": [
+    "Registry capacity is stated nowhere a judge reads, and PRD.md:321 states it wrong ('1,024 concurrent' — it is 1,024 lifetime inserts; probed to exhaustion, insert #1024 throws 'exceeded structure bounds')",
+    "The buyer is named only in PRD.md:112, absent from README, deck and submission/* — Business Development is 5% and currently unclaimed",
+    "The adversarial-witness harness covers find_path only; local_secret_key, get_lock_id, get_amount and get_salt are still modelled solely by the honest simulator",
+    "PLAN.md:208-212 specifies the test-count propagation procedure; PLAN.md:285 leaves its checkbox unticked and the procedure has never been executed to completion"
+  ],
+  "phase_ledger": [
+    { "phase": "precompute", "started_at": "2026-09-16T05:43:00Z", "completed_at": "2026-09-16T05:52:00Z", "evidence": "Read brief, PULSE (214 lines), conductor pipeline state, contract source, tests, README, DOMAIN-GUIDE, proof.md. Established ground truth by execution: npx vitest run -> 23 passed (23) at the time." },
+    { "phase": "inventory", "started_at": "2026-09-16T05:52:00Z", "completed_at": "2026-09-16T06:05:00Z", "evidence": "Enumerated 3 circuits + 3 pure circuits, 5 ledger fields, 5 witnesses, 68 tracked files, 23 tests in 7 groups, 13 feature observables, 6 submission gate items. Generated-code inspection of out/contract/index.js pinpointed the unconstrained path at lines 686-694 and 412-421." },
+    { "phase": "dispatch", "started_at": "2026-09-16T06:05:00Z", "completed_at": "2026-09-16T06:46:00Z", "evidence": "Three parallel subagents (honesty sweep, judge-simulation/competitive, demo-reliability/UX) plus direct analysis. Three runnable PoCs written and executed: merkle-path forgery (ACCEPTED pre-fix), attestor bootstrap race (deployment bricked), tree capacity (insert #1024 throws at 11.6s)." },
+    { "phase": "aggregate", "started_at": "2026-09-16T06:20:00Z", "completed_at": "2026-09-16T06:48:00Z", "evidence": "23 deduplicated findings across 4 severity tiers, each with file:line and demo/submission impact. Independently re-verified the two most load-bearing external claims: midnight-expert PR #239 via GitHub API, and 4 competitor repos' existence plus 2 of their .compact sources." },
+    { "phase": "gate", "started_at": "2026-09-16T06:45:00Z", "completed_at": "2026-09-16T06:50:00Z", "evidence": "demo_gate HAZARDS (upgraded from BLOCKED after F-01 was fixed at 06:45Z and re-verified); submission_gate BLOCKED on F-03 alone. Cross-review of the submission gate was NOT run: the shared crossmodel-lead.sh helper is broken under zsh (read -a is bash-only), recorded by the critique phase as affecting every skill that sources it." },
+    { "phase": "report", "started_at": "2026-09-16T06:25:00Z", "completed_at": "2026-09-16T06:55:00Z", "evidence": "INTERROGATE-REPORT.md written and then amended three times as the repo changed underneath: frontend committed and pushed, deck/video re-rendered, the F-01 fix landed. Contains 6 priority interview answers plus 7 secondary questions, the adversarial catch-list, and the ordered work plan." },
+    { "phase": "state", "started_at": "2026-09-16T06:55:00Z", "completed_at": "2026-09-16T06:57:00Z", "evidence": "/Users/machine/Desktop/dev/aval/.interrogate-state.json + '### interrogate' section appended to .pipeline/PULSE.md" }
+  ],
+  "deviations": [
+    "[SKILL] Ran out of pipeline order. The conductor's current_phase is stress_test; design_forge, stress_test, demo and livetest are all still pending and livetest never ran. Dispatched directly by the user anyway. The PREREQ GATE was vacuous as a result (livetest published no Blockers for Downstream), and this phase absorbed the livetest question instead: D-4 was settled positive.",
+    "[SKILL] Did not write .interrogate-cache/, .interrogate-slices/ or .interrogate-findings/ into the working directory. .interrogate-* is absent from .gitignore and the repo is published to judges today; three new dot-directories of pipeline internals would have appeared as untracked files in the submission. Per-persona working files were kept in the session scratchpad instead.",
+    "[SKILL] Did not run the additive blind cross-review of the submission gate. shared-pipeline/crossmodel-lead.sh dies under zsh with 'read -a: bad option', a known breakage recorded by the critique phase. INTERROGATE-GATE-INPUT.json was likewise not written, since nothing would have consumed it. Recorded rather than silently skipped.",
+    "[SKILL] Did not write .conductor-state.json, per explicit instruction. Phase status for interrogate is therefore still 'pending' in the conductor's view and must be set by the conductor.",
+    "[NEW] Wrote and executed three adversarial proof-of-concept scripts against the real compiled contract rather than reasoning from source. This was not in the skill's procedure; it is what turned a suspicion about line 128 into a demonstrated soundness break, and it produced the fix that was verified to compile and to block the attack before being handed over.",
+    "[NEW] Independently re-verified the two external claims the report leans on hardest — midnight-expert PR #239 via the GitHub API, and two competitors' Compact sources — rather than relaying a subagent's research unchecked.",
+    "[NEW] Re-verified the whole finding set after the repo changed underneath the audit. Between 05:43Z and 06:46Z the frontend was committed and pushed, the deck and video were re-rendered, proof.md gained a browser-verification section, and the F-01 fix landed. Every affected finding was re-checked with a tool call and amended in place with the original reading left visible, rather than absorbing the drift silently."
+  ],
+  "timestamp": "2026-09-16T06:57:00Z",
+  "working_dir": "/Users/machine/Desktop/dev/aval"
+}

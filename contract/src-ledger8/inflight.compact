@@ -46,6 +46,18 @@ witness get_amount(): Uint<64>;
 witness get_salt(): Bytes<32>;
 witness find_path(leaf: Bytes<32>): MerkleTreePath<10, Bytes<32>>;
 
+// ──────────────────────────────── Constructor ────────────────────────────────
+
+// The attestor is fixed at DEPLOY time, not claimed afterwards by whoever calls
+// first. An earlier version exposed a permissionless `register_attestor()`, which
+// let a stranger front-run the bootstrap, install their own id, and permanently
+// brick the deployment: the real operator could neither re-register nor write the
+// registry, and no rotation circuit existed. Verified by exploit before this change.
+constructor(initial_attestor: Bytes<32>) {
+  attestor = disclose(initial_attestor);
+  attestor_registered = true;
+}
+
 // ────────────────────────────── Pure helpers ─────────────────────────────────
 
 // Domain-separated identity derivation. Same pattern as the attestor id.
@@ -78,19 +90,6 @@ export pure circuit nullifier_of(lock_id: Bytes<32>, salt: Bytes<32>): Bytes<32>
 }
 
 // ──────────────────────────────── Circuits ───────────────────────────────────
-
-// One-time attestor bootstrap. In the bilateral deployment the counterparty runs
-// this themselves, which is why the trust assumption collapses: they are attesting
-// to what their own node observed on the source chain.
-export circuit register_attestor(): [] {
-  assert(!attestor_registered, "attestor already registered");
-  const id = derive_id(local_secret_key());
-  // DISCLOSE 1/6, publishes the attestor's derived public id. Intended: the whole
-  // point is that everyone can see which attestor this deployment trusts. The
-  // secret key itself never leaves the witness.
-  attestor = disclose(id);
-  attestor_registered = true;
-}
 
 // Register a commitment to an observed source-chain lock. Attestor-only.
 //

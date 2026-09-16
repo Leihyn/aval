@@ -13,7 +13,6 @@ const LOCK = { lockId: bytes32('eth-lock-8837'), amount: 2_000_000n, salt: bytes
 
 const fresh = async () => {
   const s = await AvalSimulator.create(ATTESTOR);
-  await s.registerAttestor(ATTESTOR, 1_000);
   await s.registerAttestation(ATTESTOR, leafFor(LOCK, BOB, EXPIRY), 1_000);
   return s;
 };

@@ -91,7 +91,7 @@ d.text((80,90),'It compiles, and it is tested',font=H1,fill=FG)
 pnl(d,80,200,860,300,'compact compile',GREEN)
 for i,l in enumerate(cap('compile.txt')[:8]): d.text((110,262+i*28),l[:52],font=MS,fill=AMBER if l.startswith('$') else FG)
 pnl(d,990,200,850,300,'npm test',GREEN)
-d.text((1020,275),'Tests  22 passed (22)',font=F(MONO,34),fill=GREEN)
+d.text((1020,275),'Tests  25 passed (25)',font=F(MONO,34),fill=GREEN)
 d.text((1020,335),'Duration  1.26s',font=M,fill=DIM)
 d.text((1020,385),'No Docker. No proof server.',font=M,fill=DIM)
 d.text((1020,420),'No wallet. Clone and run.',font=M,fill=DIM)
@@ -189,7 +189,7 @@ img,d=new()
 d.text((80,330),'Aval',font=T,fill=FG)
 wrap(d,'Act on a fact before that fact is public.',H1,80,460,1700,GREEN)
 d.text((80,620),'github.com/Leihyn/aval',font=F(MONO,34),fill=SKY)
-for i,l in enumerate(['Apache-2.0  ·  3 circuits  ·  6 proving keys  ·  22 passing tests',
+for i,l in enumerate(['Apache-2.0  ·  2 circuits  ·  4 proving keys  ·  25 passing tests',
                       'Compact 0.26.0  ·  compiler 0.34.0  ·  runtime 0.19.0',
                       'No Docker, no proof server, no wallet required to verify']):
     d.text((80,690+i*44),l,font=BODY,fill=DIM)
