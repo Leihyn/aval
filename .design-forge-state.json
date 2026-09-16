@@ -1,0 +1,105 @@
+{
+  "version": 3,
+  "status": "complete",
+  "autonomous_mode": true,
+  "context_percentage": 70,
+  "pipeline_run": true,
+  "currentPhase": "complete",
+  "timestamp": "2026-09-16T05:52:00Z",
+  "expected_phases": ["formalize", "refine", "logo_forge"],
+  "surface": "/Users/machine/Desktop/dev/aval/frontend",
+  "phase_ledger": [
+    {
+      "phase": "formalize",
+      "started_at": "2026-09-16T05:26:00Z",
+      "completed_at": "2026-09-16T05:48:00Z",
+      "evidence": "DESIGN_SYSTEM.md (6 sections: Identity, Tokens, Craft, Primitives, Motion, Rejection list + Verification) and brand.json written from tokens actually present in frontend/src/index.css; every colour, radius, font and type step re-derived from dist/assets/index-*.css after build"
+    },
+    {
+      "phase": "refine",
+      "started_at": "2026-09-16T05:30:00Z",
+      "completed_at": "2026-09-16T05:52:00Z",
+      "evidence": "Craft audit exit 0, 0 violations, 4 files scanned. tsc --noEmit exit 0. vite build exit 0. Four full-page screenshots captured headless at 1440x900 and 400x900 across initial/proved/rejected states with 0 console errors; two persona critics dispatched against source + rendered evidence"
+    },
+    {
+      "phase": "logo_forge",
+      "started_at": "2026-09-16T05:46:00Z",
+      "completed_at": "2026-09-16T05:50:00Z",
+      "evidence": "3 SVG variants generated and rendered at 16/32/64/128px for legibility comparison; logomark auto-selected on 16px legibility; exported logo.svg, logo.png (512), favicon.png (32), apple-touch-icon.png (180), logo-wordmark.svg; wired into index.html and inlined as the header Mark component; all 8 assets verified present in dist/"
+    }
+  ],
+  "decisions": {
+    "tier": "B",
+    "tierBasis": "[AUTO] .conductor-state.json checkpoints_answered.design_handoff was {answered:false, gate:null} and no Telegram bridge is configured. Tier A is inapplicable: it records a parityFloor against a mockup, and no frontend-design proposal artifacts exist for this project — ui-revamp went straight to code. Took the most reversible reasonable option per PIPELINE-COMMON section 3: Tier B, formalize + refine + logo over an existing built surface, no mockup-parity floor."
+  },
+  "craftAudit": { "pass": true, "violations": [] },
+  "parityFloor": null,
+  "formalize": {
+    "designSystemWritten": true,
+    "brandJsonWritten": true,
+    "tokensExtracted": 27,
+    "tokenBreakdown": {
+      "surfaces": 6,
+      "text": 3,
+      "semanticAccents": 7,
+      "typeSteps": 6,
+      "radii": 2,
+      "fontStacks": 1,
+      "keyframes": 1,
+      "utilityClasses": 1
+    }
+  },
+  "refine": {
+    "craftAudit": { "pass": true, "violations": [], "filesScanned": 4, "exitCode": 0 },
+    "typecheck": { "command": "npx tsc --noEmit -p tsconfig.json", "exitCode": 0 },
+    "build": { "command": "npm run build", "exitCode": 0, "cssKb": 16.13, "jsKb": 322.1 },
+    "consoleErrors": 0,
+    "personaCritique": { "iterations": 1, "agents": ["zero-context-user", "design-critic-technical"], "remainingIssues": [] },
+    "bugsFixed": [
+      "All 10 rounded-[--radius-*] usages compiled to the invalid declaration `border-radius: --radius-card` under Tailwind v4 and were silently dropped by the browser — every card, banner, input and button in the shipped app rendered square-cornered. Switched to the theme-generated rounded-card / rounded-control utilities; verified `border-radius: var(--radius-card)` in dist CSS.",
+      "--color-ink-500 was #6b7189, 4.06:1 on base-900 — below WCAG AA for the 11px labels and glosses it is used for. Raised to #757b94, now 4.69:1 on base-900 and 4.54:1 on base-850."
+    ]
+  },
+  "logo_forge": {
+    "variantsGenerated": 3,
+    "selectedVariant": "logo-v1.svg",
+    "selectionBasis": "[AUTO] favicon legibility at 16px — the logomark is the only variant that survives; the wordmark loses its letterforms and the combination loses its text.",
+    "exports": [
+      "frontend/public/logo.svg",
+      "frontend/public/logo.png",
+      "frontend/public/favicon.png",
+      "frontend/public/apple-touch-icon.png",
+      "frontend/public/logo-wordmark.svg"
+    ],
+    "wiredInto": ["frontend/index.html", "frontend/src/App.tsx (inline Mark component)"]
+  },
+  "amplifier": {
+    "status": "skipped",
+    "reason": "not provisioned — $HOME/.claude/peer-pipeline-m2dev/amplify/crossmodel-amplify.sh does not exist. Non-blocking per SKILL.md Phase 1.5."
+  },
+  "constraints_honoured": {
+    "did_not_edit": ["frontend/src/lib/demo.ts", "frontend/vite.config.ts"],
+    "buildExitZero": true,
+    "typecheckClean": true,
+    "newRuntimeDependencies": 0,
+    "networkFetchesAtLoad": 0,
+    "bootBannerPreserved": true,
+    "legibleAt400px": true,
+    "darkOnly": true,
+    "rejectionListHonoured": true,
+    "fabricatedValues": 0
+  },
+  "artifacts": {
+    "designSystem": "/Users/machine/Desktop/dev/aval/DESIGN_SYSTEM.md",
+    "brandJson": "/Users/machine/Desktop/dev/aval/brand.json",
+    "logo": "/Users/machine/Desktop/dev/aval/frontend/public/logo.svg",
+    "screenshots": [
+      "/private/tmp/claude-501/-Users-machine-Desktop-dev/531dfe86-c965-4423-9ed7-c59e3bdbdbc8/scratchpad/shots/desktop-initial.png",
+      "/private/tmp/claude-501/-Users-machine-Desktop-dev/531dfe86-c965-4423-9ed7-c59e3bdbdbc8/scratchpad/shots/desktop-proved.png",
+      "/private/tmp/claude-501/-Users-machine-Desktop-dev/531dfe86-c965-4423-9ed7-c59e3bdbdbc8/scratchpad/shots/desktop-rejected.png",
+      "/private/tmp/claude-501/-Users-machine-Desktop-dev/531dfe86-c965-4423-9ed7-c59e3bdbdbc8/scratchpad/shots/mobile-400.png",
+      "/private/tmp/claude-501/-Users-machine-Desktop-dev/531dfe86-c965-4423-9ed7-c59e3bdbdbc8/scratchpad/shots/compare.png",
+      "/private/tmp/claude-501/-Users-machine-Desktop-dev/531dfe86-c965-4423-9ed7-c59e3bdbdbc8/scratchpad/shots/logos.png"
+    ]
+  }
+}

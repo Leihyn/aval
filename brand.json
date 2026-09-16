@@ -1,0 +1,67 @@
+{
+  "name": "Aval",
+  "tagline": "Proof of funds in flight",
+  "description": "Prove money is committed but not yet arrived, so a counterparty can act now instead of waiting for settlement. The amount never reaches the chain.",
+  "colorMode": "dark-only",
+  "brandColor": "#34d399",
+  "accent": "#34d399",
+  "accentSecondary": "#56b6f0",
+  "accentRationale": "Two accents, semantic rather than decorative, because the split IS the product argument. #34d399 SIGNAL is what the counterparty learns; #56b6f0 LEDGER is what the public chain learns. A surface is tinted only when it belongs to one of those two audiences.",
+  "ink": ["#05060a", "#0a0b12", "#0e1018", "#141723", "#1e2130", "#2a2e40"],
+  "text": {
+    "primary": "#eceef5",
+    "secondary": "#a8adc0",
+    "muted": "#757b94"
+  },
+  "semantic": {
+    "success": "#34d399",
+    "warning": "#f0b356",
+    "danger": "#f2607a"
+  },
+  "fonts": {
+    "display": "ui-sans-serif, system-ui, -apple-system, \"Segoe UI\", sans-serif",
+    "body": "ui-sans-serif, system-ui, -apple-system, \"Segoe UI\", sans-serif",
+    "mono": "ui-monospace, \"SF Mono\", SFMono-Regular, Menlo, monospace"
+  },
+  "fontLoading": "system-only",
+  "fontRationale": "No web fonts and no network fetch at page load; the demo must render fully offline. Institutional finance / trading terminal: system sans for prose, true monospace with tabular figures for every value compared side by side.",
+  "radii": { "control": 8, "card": 14 },
+  "shadowPhilosophy": "none",
+  "shadowRationale": "Depth is one-pixel borders and surface-elevation steps only. No box-shadow, no drop-shadow, no backdrop-blur ships in the build. Glow reads as marketing; this surface has to read as an instrument.",
+  "signatureElement": "The split rule: a two-pixel cap in each pane's own accent, which side by side forms one continuous two-tone line across the page. The same motif is the logo — a filled block beside an open outline containing nothing.",
+  "motion": {
+    "keyframes": ["f-rise"],
+    "defaultTransition": "150ms ease-out, colour only",
+    "pressFeedback": "active:scale-[0.99]",
+    "reducedMotion": "all animation and transition collapsed to 0.01ms"
+  },
+  "logoPath": "frontend/public/logo.svg",
+  "logoVariants": {
+    "logomark": "frontend/public/logo-v1.svg",
+    "wordmark": "frontend/public/logo-v2.svg",
+    "combination": "frontend/public/logo-v3.svg",
+    "selected": "logo-v1.svg",
+    "selectionBasis": "[AUTO] favicon legibility at 16px — the logomark is the only variant that stays readable; the wordmark loses its letterforms and the combination loses its text."
+  },
+  "logoExports": {
+    "svg": "frontend/public/logo.svg",
+    "png512": "frontend/public/logo.png",
+    "favicon32": "frontend/public/favicon.png",
+    "appleTouch180": "frontend/public/apple-touch-icon.png",
+    "wordmarkSvg": "frontend/public/logo-wordmark.svg"
+  },
+  "rejectionList": [
+    "neon",
+    "gradients",
+    "glassmorphism or blur",
+    "emoji",
+    "purple-to-pink crypto palette",
+    "rounded-everything",
+    "bounce or spring on functional controls",
+    "hero illustration",
+    "marketing copy in the product surface",
+    "any number the contract did not actually produce"
+  ],
+  "designSystem": "DESIGN_SYSTEM.md",
+  "surface": "frontend/"
+}

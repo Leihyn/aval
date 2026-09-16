@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 32" width="120" height="32" role="img" aria-label="Aval">
+  <text x="0" y="21" font-family="ui-monospace,SFMono-Regular,Menlo,monospace" font-size="20" font-weight="600" letter-spacing="-0.5" fill="#eceef5">aval</text>
+  <rect x="0" y="26" width="24" height="2" fill="#34d399"/>
+  <rect x="24" y="26" width="24" height="2" fill="#56b6f0"/>
+</svg>
