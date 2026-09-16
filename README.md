@@ -63,7 +63,7 @@ Six `disclose()` call sites bridge the two, each annotated in the source with wh
 | The prover cannot inflate the amount | leaf recomputation in-circuit | 1 test |
 | Attestations expire | `kernel.blockTimeLessThan`, ledger block time, not a caller-supplied timestamp | 2 tests |
 | Only the attestor writes the registry | derived-id equality check | 2 tests |
-| The amount never reaches public state | asserted against a full ledger dump | 4 tests |
+| The amount never reaches public state | no ledger field holds it; asserted against the attestor id, fill count, nullifier set and root | 4 tests |
 
 ## Quick start
 

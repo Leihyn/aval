@@ -500,7 +500,12 @@ if (import.meta.url === `file://${process.argv[1]}`) {
 
 ### Purpose
 
-Make the privacy claim legible. Two panes rendered from one simulator instance: what the counterparty learns, next to a literal dump of everything on the public ledger. A judge does not have to trust the claim; they read the right pane and observe the absence.
+Make the privacy claim legible. Two panes rendered from one simulator instance: what the counterparty learns, next to the public ledger state.
+
+<!-- [CRITIQUE E-2] `readLedger` in frontend/src/lib/demo.ts builds a hand-authored 5-field view and truncates each value with `.slice(0, 24)`. It is not a dump of everything on the ledger, and the previous wording claimed it was. -->
+<!-- [CRITIQUE E-2] Observing an absence in developer-authored JSON proves nothing: the pane would look identical if the contract DID leak the amount and the renderer simply omitted the key. The witnessable property is indistinguishability, not absence. -->
+
+A judge should not have to trust either the claim or the renderer. The pane therefore has two obligations: render the ledger object's own fields rather than a curated list, and support the indistinguishability comparison (same lock, two different amounts, byte-identical public state except the root hash).
 
 ### Key decision
 

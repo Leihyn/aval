@@ -10,7 +10,7 @@ machine, not intent.
 | F-002 | Proving keys generate | `out-full/keys/` contains 3 `.prover` and 3 `.verifier` | `compact compile src/inflight.compact out-full && ls out-full/keys` | fewer than 6 key files | **YES** |
 | F-003 | Threshold proof succeeds when amount clears | `fills` counter increments 0 to 1 | `npx vitest run -t "proves a registered lock clears the threshold"` | `fills` stays 0n | **YES** |
 | F-004 | Threshold proof fails when amount is short | circuit throws matching `/below required threshold/` | `npx vitest run -t "rejects a lock below the required threshold"` | call resolves instead of throwing | **YES** |
-| F-005 | Amount never reaches public state | full JSON dump of public ledger does NOT contain the amount string | `npx vitest run -t "never exposes the locked amount"` | dump contains `50000` | **YES** |
+| F-005 | Amount never reaches public state | JSON of every public ledger field (attestor, fills, nullifier set, root) does NOT contain the amount string | `npx vitest run -t "never exposes the locked amount"` | dump contains `50000` | **YES** |
 | F-006 | One lock backs exactly one proof | second proof on same lock throws `/already backed a proof/`, `fills` stays 1 | `npx vitest run -t "rejects the same lock being proven twice"` | `fills` reaches 2n | **YES** |
 | F-007 | Attestation is non-transferable | proof against a different counterparty finds no Merkle path | `npx vitest run -t "rejects replaying an attestation"` | proof succeeds for Carol | **YES** |
 | F-008 | Prover cannot inflate the amount | inflated `amount` produces a leaf with no path | `npx vitest run -t "rejects a prover who inflates"` | proof succeeds at inflated amount | **YES** |

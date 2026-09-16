@@ -33,7 +33,7 @@
     ],
     "demoFormat": "recorded",
     "demo": {
-      "logo_description": "Aval — trade-finance guarantee mark, midnight/dark palette",
+      "logo_description": "Aval \u2014 trade-finance guarantee mark, midnight/dark palette",
       "music_vibe": "none",
       "creative_overrides": "let skill decide"
     },
@@ -42,10 +42,11 @@
     "copilot_pat_available": false,
     "project_name": "Aval",
     "deploy_policy": "NO DOCKER. Simulator tests + Vercel frontend only. Midnight testnet deploy explicitly out of scope per user decision.",
-    "phase_policy": "USER DIRECTIVE: do not skip any phase. All 19 run at full depth. Safety line at 2026-09-16T13:00:00Z: package a submittable bundle from whatever exists; report unrun phases as not-run."
+    "phase_policy": "USER DIRECTIVE: do not skip any phase. All 19 run at full depth. Safety line at 2026-09-16T13:00:00Z: package a submittable bundle from whatever exists; report unrun phases as not-run.",
+    "demo_route": "quick-cut with on-screen captions (user-selected)"
   },
   "pipeline": {
-    "current_phase": "forge",
+    "current_phase": "critique",
     "phases": {
       "intel": {
         "status": "complete",
@@ -56,16 +57,16 @@
         "status": "skipped",
         "dispatched_at": "2026-09-16T03:45:11Z",
         "completed_at": "2026-09-16T03:46:19Z",
-        "note": "SKIPPED for two independent reasons, neither of which is time pressure. (1) SKILL NOT INSTALLED: ~/.claude/skills/hackathon-warroom does not exist on this machine; it is referenced by phase-catalog.md but absent. All 16 other phase skills verified present. (2) DOCUMENTED SKIP CONDITION MET: phase-catalog.md line 127 — 'If user already has a specific idea: skip warroom, set pipeline.phases.warroom.status = skipped. Checkpoint 2 still fires using the warroom-skipped variant.' The user selected the idea directly; Checkpoint 2 (idea_selection) is already answered in checkpoints_answered."
+        "note": "SKIPPED for two independent reasons, neither of which is time pressure. (1) SKILL NOT INSTALLED: ~/.claude/skills/hackathon-warroom does not exist on this machine; it is referenced by phase-catalog.md but absent. All 16 other phase skills verified present. (2) DOCUMENTED SKIP CONDITION MET: phase-catalog.md line 127 \u2014 'If user already has a specific idea: skip warroom, set pipeline.phases.warroom.status = skipped. Checkpoint 2 still fires using the warroom-skipped variant.' The user selected the idea directly; Checkpoint 2 (idea_selection) is already answered in checkpoints_answered."
       },
       "forge": {
-        "status": "running",
+        "status": "complete",
         "dispatched_at": "2026-09-16T03:47:11Z",
-        "completed_at": null
+        "completed_at": "2026-09-16T04:19:21Z"
       },
       "critique": {
-        "status": "pending",
-        "dispatched_at": null,
+        "status": "running",
+        "dispatched_at": "2026-09-16T04:19:34Z",
         "completed_at": null
       },
       "url_preverify": {
@@ -149,6 +150,13 @@
       "research_path": "/Users/machine/Desktop/dev/aval/research/research-brief.md",
       "config_path": "/Users/machine/Desktop/dev/aval/config.json",
       "state_path": "/Users/machine/Desktop/dev/aval/intel-state.json"
+    },
+    "forge": {
+      "prd_path": "/Users/machine/Desktop/dev/aval/PRD.md",
+      "architecture_path": "/Users/machine/Desktop/dev/aval/ARCHITECTURE.md",
+      "plan_path": "/Users/machine/Desktop/dev/aval/PLAN.md",
+      "state_path": "/Users/machine/Desktop/dev/aval/.forge-state.json",
+      "env_example_path": "/Users/machine/Desktop/dev/aval/.env.example"
     }
   },
   "intelState": {
@@ -164,17 +172,30 @@
       "result": "PASS"
     },
     "keyFinding": "In-flight settlement category is EMPTY (0 of 59 submissions). Dev infra ~1. Credit/solvency 15 and identity 8 are saturated; identity contains a returning 3rd-place Midnight winner (bytewizard42i, 3 entries this wave).",
-    "criticalConstraint": "No in-circuit ECDSA on Midnight (Secp256k1* unbound in shipped 0.34.0). Deploy NOT required — gate is compile-only, no Docker needed."
+    "criticalConstraint": "No in-circuit ECDSA on Midnight (Secp256k1* unbound in shipped 0.34.0). Deploy NOT required \u2014 gate is compile-only, no Docker needed."
   },
   "warroomState": {
     "status": "skipped",
     "reason": "skill not installed AND documented skip condition met (user supplied the idea)",
-    "selected_idea": "Aval — prove money is committed but not yet arrived, so a counterparty can act now instead of waiting for bridge finality",
+    "selected_idea": "Aval \u2014 prove money is committed but not yet arrived, so a counterparty can act now instead of waiting for bridge finality",
     "ideas_alive": 1,
     "ideas_killed": 0,
-    "deliberation": "none — single user-selected idea"
+    "deliberation": "none \u2014 single user-selected idea"
   },
-  "forgeState": null,
+  "forgeState": {
+    "status": "complete",
+    "projectName": "Aval",
+    "stack": "Compact, TypeScript, React 19, Vite 6, Tailwind v4, vitest",
+    "hasFrontend": true,
+    "hasContracts": true,
+    "prdLines": 488,
+    "architectureLines": 895,
+    "planLines": 483,
+    "project_type": "contract-only",
+    "featureObservablesPath": "/Users/machine/Desktop/dev/aval/FEATURE-OBSERVABLES.md",
+    "featureObservablesVerified": "13/13",
+    "crossReview": "thesis-2 DISAGREE (peer sonnet) -> resolved by reconciling PRD Flow 3 with Thesis field 4; thesis untouched"
+  },
   "critiqueState": null,
   "buildState": null,
   "debugState": null,
@@ -192,14 +213,41 @@
   "demoRehearsalState": null,
   "builder_profile": "Onatola Timilehin Faruq (Leihyn). Prior ZK/privacy: omniswap-sdk (zkSNARK/zkSTARK cross-chain), nocturne (Noir/UltraHonk, Solana), omnishield-wallet, DarkSTARK (Pedersen commitments + nullifiers, Cairo). Won Mina Content Creation Track, Zypherpunk. Applied to Midnight Foundation DevRel.",
   "credentials_location": "~/.claude/credentials/pipeline-credentials.env",
-  "confirmed_urls": {},
+  "confirmed_urls": {
+    "github_repo": {
+      "url": "https://github.com/Leihyn/aval",
+      "http": 200,
+      "public": true,
+      "topics": [
+        "compact",
+        "midnight",
+        "midnightntwrk",
+        "privacy",
+        "zero-knowledge"
+      ],
+      "midnightntwrk_topic_present": true,
+      "verified_at": "2026-09-16T04:26:37Z"
+    },
+    "raw_readme": {
+      "url": "https://raw.githubusercontent.com/Leihyn/aval/main/README.md",
+      "http": 200
+    },
+    "raw_contract": {
+      "url": "https://raw.githubusercontent.com/Leihyn/aval/main/contract/src/inflight.compact",
+      "http": 200
+    },
+    "raw_license": {
+      "url": "https://raw.githubusercontent.com/Leihyn/aval/main/LICENSE",
+      "http": 200
+    }
+  },
   "existing_research": {
     "brief": "BRIEF.md",
     "note": "Competitive field (all 59 Wave-1 submissions) already pulled from Akindo public API and clustered. Toolchain facts empirically verified. Do not re-derive."
   },
   "dispatch_context": {
     "mode": "fresh",
-    "target_skill": "hackathon-forge",
+    "target_skill": "hackathon-critique",
     "attempt": 1,
     "max_attempts": 3,
     "working_dir": "/Users/machine/Desktop/dev/aval",
@@ -213,8 +261,8 @@
   "continuation_manifest": {
     "continuation_count": 0,
     "max_continuations": 5,
-    "last_completed_phase": "warroom",
-    "next_expected_phase": "forge",
+    "last_completed_phase": "forge",
+    "next_expected_phase": "critique",
     "spawned_at": "2026-09-16T03:28:27Z"
   },
   "retry_ledger": {},
@@ -222,13 +270,19 @@
     "manifest": true,
     "idea_selection": {
       "answered": true,
-      "choice": "Aval — proof of funds in flight on Midnight",
+      "choice": "Aval \u2014 proof of funds in flight on Midnight",
       "modifications": "User chose the vertical directly: prove money committed but not yet arrived so a counterparty can act now. Wave-1 scope = ONE vertical (funds in flight) + primitive + roadmap for identity/solvency/invoices."
     },
     "post_forge_credentials": {
-      "answered": false,
+      "answered": true,
       "collected": [],
-      "skipped": []
+      "skipped": [
+        "SOURCE_RPC_URL",
+        "SOURCE_ESCROW_ADDRESS",
+        "ATTESTOR_PRIVATE_KEY",
+        "VERCEL_TOKEN"
+      ],
+      "note": "Wave 1 requires ZERO credentials by design: no RPC, no wallet, no keys, no Docker. All .env.example entries are Wave 2 scope and unread by existing code. VERCEL_TOKEN only needed if we deploy the frontend."
     },
     "design_handoff": {
       "answered": false,

@@ -1,0 +1,11 @@
+$ npx tsx scripts/attack-demo.ts
+--- Aval: six real attacks, six real revert strings ---
+
+  reuse the same lock twice          BLOCKED: this lock has already backed a proof
+  inflate the claimed amount         BLOCKED: no merkle path: leaf is not registered
+  redirect to a different payee      BLOCKED: no merkle path: leaf is not registered
+  extend your own expiry             BLOCKED: no merkle path: leaf is not registered
+  prove after expiry                 BLOCKED: attestation expired
+  ask for more than is locked        BLOCKED: locked amount below required threshold
+
+  All six blocked by the circuit, not by application code.

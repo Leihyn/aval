@@ -1,0 +1,8 @@
+$ npx tsx scripts/seed-demo.ts
+--- Aval demo seed: produced by real circuit execution ---
+attestor registered : true
+attestations in tree: 3
+fills               : 1
+nullifiers spent    : 1
+nullifier           : 7fe3e3af80ac5555e7a8980793ed8432e0a78857934d5177ad25937f8eaea0f5
+amount in ledger    : absent by construction

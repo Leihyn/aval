@@ -43,7 +43,7 @@ The public ledger records a Merkle root, a nullifier, and a fill count. It never
 | Judging criterion | Weight | How Aval scores |
 |---|---:|---|
 | Engineering & Implementation | 40% | Three compiling circuits with genuine private-state management. Six explicit `disclose()` boundaries, each annotated with what an observer actually learns. Nullifier-based double-spend prevention. Real on-chain expiry via `kernel.blockTimeLessThan`, not a caller-supplied timestamp. |
-| Quality Assurance & Reliability | 15% | 22 passing simulator tests. Runs from a clean clone with no Docker and no proof server. Four of the tests mechanically assert the privacy property rather than describing it. |
+| Quality Assurance & Reliability | 15% | 22 passing simulator tests. Runs from a clean clone with no Docker and no proof server. A dedicated privacy group asserts public state mechanically, including an indistinguishability test: the same lock at two amounts 100x apart produces byte-identical public state except the root hash. |
 | Product & Vision | 15% | One vertical shipped, three roadmapped. Directly matches Midnight's own stated 2026 priorities: "institutional execution" and "programmable compliance". |
 | User Experience & Design | 15% | A two-pane demo: what the counterparty sees versus what the chain sees, side by side. The privacy claim is legible, not asserted. |
 | Communication | 10% | Demo video leads with the 40-minute dead-capital window, then collapses it to zero on screen. |
@@ -285,7 +285,12 @@ requestProof(required: bigint, counterparty: Uint8Array, expiry: bigint): Promis
 
 **Purpose:** make the privacy claim legible.
 
-**Interface contract:** two panes rendered from the same simulator instance. Left pane = what the counterparty knows. Right pane = a literal dump of public ledger state.
+**Interface contract:** two panes rendered from the same simulator instance. Left pane = what the counterparty knows. Right pane = public ledger state.
+
+<!-- [CRITIQUE E-2] Corrected overclaim: the pane was described as a "literal dump" but renders a hand-authored, truncated 5-field projection (frontend/src/lib/demo.ts readLedger). A judge cannot distinguish "the contract does not write the amount" from "the developer did not render an amount key". -->
+<!-- [CRITIQUE E-3, DEFERRED] Make the claim true: render every field of the ledger object generically and untruncated, so the absence is structural rather than authored. Owner: build. -->
+
+**Honesty constraint on this pane:** the right pane must never be described as a full or literal ledger dump while it renders a hand-picked field list. Either the renderer enumerates the ledger object's own fields, or the copy says "selected public ledger fields". Absence in a developer-authored JSON is not evidence; indistinguishability across two different amounts is (see Section 4.2a).
 
 ---
 
