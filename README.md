@@ -2,6 +2,8 @@
 
 **Prove money is committed but not yet arrived, so a counterparty can act now instead of waiting for settlement.**
 
+*An aval is a trade-finance term: a third party's guarantee that a payment will happen. Aval replaces the guarantor with a proof.*
+
 Built on [Midnight](https://midnight.network) for the Midnight Buildathon, Wave 1.
 
 ```bash
@@ -26,6 +28,23 @@ That waiting window is a gap between a fact being **true** and that fact being *
 Alice locks funds in an escrow on a source chain. She proves to Bob's Midnight contract that the locked amount clears his threshold and is earmarked for him specifically, **without revealing how much she locked, which lock it was, or who she is.** Bob's contract verifies and releases his leg immediately.
 
 The public ledger records a Merkle root, a nullifier, and a fill count. It never records an amount.
+
+### This is an instrument, not a statement
+
+Commitment, membership proof, threshold, nullifier: if you have read a proof-of-reserves
+circuit, you have seen that shape. The construction is not what is novel here. Three
+mechanisms are, and all three exist because settlement needs them and a balance claim
+does not:
+
+| Mechanism | How | Why a solvency or credential proof does not need it |
+|---|---|---|
+| **Single use** | the nullifier is derived from the private `lock_id` and `salt`, so one lock backs exactly one proof, ever | a reserves claim is a reusable statement about a standing balance; reuse is the normal case, not an attack |
+| **Counterparty bound** | `counterparty` is hashed into the leaf, so an attestation issued for Bob is worthless to Carol | a credential is a broadcast claim, deliberately presentable to anyone |
+| **Expiring** | `kernel.blockTimeLessThan`, ledger block time, not a caller-supplied timestamp | a balance proof is about now; an in-flight proof is about a window that closes |
+
+Nine of the tests cover those three. Together they make the output a single-use,
+counterparty-bound, expiring bearer instrument. That is the difference between a proof
+you show and a proof you spend.
 
 ## How it works
 
@@ -129,6 +148,44 @@ Midnight cannot see Ethereum. So how does the contract know Alice really locked 
 
 The obvious objection: if Bob can see the lock, why does he need Alice's proof? Because **Bob's contract cannot see Ethereum even though Bob can.** Bob registers what his node observed; Alice's proof buys her privacy from everyone who is not Bob, and buys the contract an on-chain-verifiable fact to gate on. Both are real, and neither requires a third party.
 
+### Say the uncomfortable part
+
+The problem statement at the top of this README says: do not reveal the amount, because
+it hands your counterparty your negotiating position. **In the bilateral deployment that
+ships here, that is not what happens, and it would be dishonest to imply otherwise.**
+Bob runs the attestor. The attestor computes `leaf_hash(lock_id, amount, ...)`, and you
+cannot compute that leaf without the amount. Bob also holds `lock_id` and `salt`, so he
+can recompute Alice's nullifier: the proof is unlinkable to the public, but not to him.
+
+So in Wave 1 the zero-knowledge layer buys exactly two things, and it is worth being
+precise about which:
+
+1. **Privacy from the chain and from every third party.** Amount, lock identity and
+   Alice's identity never reach public state. The settlement is on-ledger; the terms are
+   not.
+2. **A machine-checkable gate.** Bob's *node* knowing something is not the same as Bob's
+   *contract* being able to act on it. The proof turns an off-chain observation into an
+   on-chain predicate that releases value without Bob in the loop.
+
+**Privacy from the counterparty is rung two, not Wave 1.** It arrives with the k-of-n
+quorum, where no single attestor sees a whole lock. What makes that roadmap credible
+rather than aspirational: **`prove_funds_in_flight` does not change to get there.** The
+circuit proves membership in a tree and never learns which attestor inserted the leaf.
+Going from one attestor to k-of-n, to bonded attestors, to a light client is a change to
+`register_attestation` alone. The money circuit is already quorum-ready.
+
+### What an observer still learns
+
+Hiding the amount is not hiding everything, and a submission that only publishes its
+wins has not been audited:
+
+| Still public | Consequence |
+|---|---|
+| `fills`, and the block time of each proof | deal count and cadence; for a treasury desk, flow volume is itself competitive information |
+| number of registered attestations | upper bound on outstanding commitments |
+| `attestor` id | which counterparty deployment this is |
+| that *a* threshold was cleared | the predicate result, which is the point, but it is still a bit |
+
 **The ladder above that,** none of it built in Wave 1:
 
 1. k-of-n attestor quorum for small multilateral settings
@@ -150,18 +207,20 @@ Being specific about this is part of the submission.
 - **No Midnight testnet deployment.** Toolchain 0.34 targets ledger 9, which is not live on testnet, and the buildathon's Technical Gate requires the contract to *compile*, not to deploy. Compiling is verified above.
 - **No live Ethereum listener.** The source-chain leg is a scripted escrow event. A real listener is Wave 2 and would need `SOURCE_RPC_URL`.
 - **No encryption on the preimage channel.** In Wave 1 the attestor hands Alice the preimage by direct return inside the demo.
-- **Only one vertical.** Identity preconditions, private solvency, and invoice factoring are roadmap, not code.
+- **Only one settlement moment.** Delivery-versus-payment, letters of credit and invoice factoring are roadmap, not code.
+- **No attestor key rotation.** `register_attestor` is one-shot: no rotation, no revocation. A lost attestor key permanently bricks the registry, and every unproven lock behind it is stranded. Rotation lands with the k-of-n quorum, because a quorum needs a membership set anyway.
+- **The nullifier is per-deployment.** It prevents one lock backing two proofs against the same counterparty. It does not span counterparties; that is prevented by the beneficiary binding inside the leaf, which is off-chain watcher policy rather than a contract invariant.
 
 ## Roadmap
 
 The primitive is "prove a committed-but-unsettled fact satisfies a predicate". Funds in flight is one predicate.
 
-| Wave | Vertical | Predicate |
+| Wave | Settlement moment | Predicate |
 |---|---|---|
 | 1 (this) | Funds in flight | `amount >= required AND beneficiary == counterparty` |
-| 2 | Identity preconditions | `kyc_passed AND jurisdiction NOT IN sanctioned` |
 | 2 | Real source-chain attestor | live listener, k-of-n quorum, encrypted preimage channel |
-| 3 | Private solvency | `reserves >= liabilities` |
+| 2 | Delivery versus payment | `goods_released AND payment_committed >= invoiced` |
+| 3 | Letter of credit | `documents_conform AND issuer_committed AND NOT expired` |
 | 3 | Invoice factoring | `invoice_valid AND unpaid AND amount >= advance` |
 
 ## Developer-experience notes for the Midnight team
