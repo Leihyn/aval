@@ -1,0 +1,216 @@
+{
+  "working_dir": "/Users/machine/Desktop/dev/aval",
+  "hackathon": {
+    "name": "The Midnight Buildathon",
+    "url": "https://app.akindo.io/wave-hacks/jaMZjqPOBsLXvjdG",
+    "platform": "other",
+    "hard_deadline": "2026-09-16T15:00:00Z",
+    "soft_deadline": "2026-09-16T13:00:00Z",
+    "videoLengthRequirement": 300,
+    "tracks": [
+      "Wave 1 (single track)"
+    ],
+    "judging_criteria": "Engineering & Implementation 40%; Quality Assurance & Reliability 15%; Product & Vision 15%; User Experience & Design 15%; Communication 10%; Business Development & Viability 5%. TECHNICAL GATE (auto-DQ): >=1 Compact contract that compiles; public GitHub repo with `midnightntwrk` topic; Apache-2.0; README; slide deck; demo video.",
+    "discord_servers": [
+      "https://discord.gg/SUZNRF6fu"
+    ],
+    "telegram_groups": [],
+    "sponsors": [
+      "Midnight Network",
+      "Midnight Foundation"
+    ],
+    "judges": []
+  },
+  "manifest": {
+    "research_depth": 6,
+    "team": [
+      {
+        "name": "Onatola Timilehin Faruq",
+        "email": "onatolafaruq@gmail.com",
+        "github": "Leihyn",
+        "twitter": ""
+      }
+    ],
+    "demoFormat": "recorded",
+    "demo": {
+      "logo_description": "Aval — trade-finance guarantee mark, midnight/dark palette",
+      "music_vibe": "none",
+      "creative_overrides": "let skill decide"
+    },
+    "dry_run": false,
+    "dry_run_goal": null,
+    "copilot_pat_available": false,
+    "project_name": "Aval",
+    "deploy_policy": "NO DOCKER. Simulator tests + Vercel frontend only. Midnight testnet deploy explicitly out of scope per user decision.",
+    "phase_policy": "USER DIRECTIVE: do not skip any phase. All 19 run at full depth. Safety line at 2026-09-16T13:00:00Z: package a submittable bundle from whatever exists; report unrun phases as not-run."
+  },
+  "pipeline": {
+    "current_phase": "intel",
+    "phases": {
+      "intel": {
+        "status": "running",
+        "dispatched_at": "2026-09-16T03:30:08Z",
+        "completed_at": null
+      },
+      "warroom": {
+        "status": "pending",
+        "dispatched_at": null,
+        "completed_at": null
+      },
+      "forge": {
+        "status": "pending",
+        "dispatched_at": null,
+        "completed_at": null
+      },
+      "critique": {
+        "status": "pending",
+        "dispatched_at": null,
+        "completed_at": null
+      },
+      "url_preverify": {
+        "status": "pending"
+      },
+      "build": {
+        "status": "pending",
+        "dispatched_at": null,
+        "completed_at": null
+      },
+      "debug": {
+        "status": "pending",
+        "dispatched_at": null,
+        "completed_at": null
+      },
+      "wire": {
+        "status": "pending",
+        "dispatched_at": null,
+        "completed_at": null
+      },
+      "verify_milestone": {
+        "status": "pending",
+        "dispatched_at": null,
+        "completed_at": null
+      },
+      "design_forge": {
+        "status": "pending",
+        "tier": null,
+        "dispatched_at": null,
+        "completed_at": null
+      },
+      "stress_test": {
+        "status": "pending",
+        "dispatched_at": null,
+        "completed_at": null
+      },
+      "polish": {
+        "status": "pending",
+        "dispatched_at": null,
+        "completed_at": null
+      },
+      "demo": {
+        "status": "pending",
+        "dispatched_at": null,
+        "completed_at": null
+      },
+      "deploy": {
+        "status": "pending",
+        "dispatched_at": null,
+        "completed_at": null
+      },
+      "livetest": {
+        "status": "pending",
+        "dispatched_at": null,
+        "completed_at": null
+      },
+      "interrogate": {
+        "status": "pending",
+        "dispatched_at": null,
+        "completed_at": null
+      },
+      "demo_rehearsal": {
+        "status": "pending",
+        "dispatched_at": null,
+        "completed_at": null
+      },
+      "package": {
+        "status": "pending",
+        "dispatched_at": null,
+        "completed_at": null
+      },
+      "verify_preflight": {
+        "status": "pending",
+        "dispatched_at": null,
+        "completed_at": null
+      }
+    }
+  },
+  "artifacts": {},
+  "intelState": null,
+  "warroomState": null,
+  "forgeState": null,
+  "critiqueState": null,
+  "buildState": null,
+  "debugState": null,
+  "wireState": null,
+  "verifyMilestoneState": null,
+  "verifyPreflightState": null,
+  "demoState": null,
+  "deployState": null,
+  "packageState": null,
+  "designForge": null,
+  "stressTestState": null,
+  "polishState": null,
+  "livetestState": null,
+  "interrogateState": null,
+  "demoRehearsalState": null,
+  "builder_profile": "Onatola Timilehin Faruq (Leihyn). Prior ZK/privacy: omniswap-sdk (zkSNARK/zkSTARK cross-chain), nocturne (Noir/UltraHonk, Solana), omnishield-wallet, DarkSTARK (Pedersen commitments + nullifiers, Cairo). Won Mina Content Creation Track, Zypherpunk. Applied to Midnight Foundation DevRel.",
+  "credentials_location": "~/.claude/credentials/pipeline-credentials.env",
+  "confirmed_urls": {},
+  "existing_research": {
+    "brief": "BRIEF.md",
+    "note": "Competitive field (all 59 Wave-1 submissions) already pulled from Akindo public API and clustered. Toolchain facts empirically verified. Do not re-derive."
+  },
+  "dispatch_context": {
+    "mode": "fresh",
+    "target_skill": null,
+    "attempt": 1,
+    "max_attempts": 3,
+    "working_dir": "/Users/machine/Desktop/dev/aval",
+    "gap_list": [],
+    "cascade_diagnosis": null,
+    "deploy_targets": [
+      "vercel"
+    ],
+    "deploy_env_vars": {}
+  },
+  "continuation_manifest": {
+    "continuation_count": 0,
+    "max_continuations": 5,
+    "last_completed_phase": null,
+    "next_expected_phase": "intel",
+    "spawned_at": "2026-09-16T03:28:27Z"
+  },
+  "retry_ledger": {},
+  "checkpoints_answered": {
+    "manifest": true,
+    "idea_selection": {
+      "answered": true,
+      "choice": "Aval — proof of funds in flight on Midnight",
+      "modifications": "User chose the vertical directly: prove money committed but not yet arrived so a counterparty can act now. Wave-1 scope = ONE vertical (funds in flight) + primitive + roadmap for identity/solvency/invoices."
+    },
+    "post_forge_credentials": {
+      "answered": false,
+      "collected": [],
+      "skipped": []
+    },
+    "design_handoff": {
+      "answered": false,
+      "gate": null
+    },
+    "demo_rehearsal_blocked": {
+      "answered": false
+    },
+    "demo_blocked": {
+      "answered": false
+    }
+  }
+}

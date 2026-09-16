@@ -1,0 +1,6 @@
+.conductor-lock/
+.crossmodel-gate/
+*.bak
+node_modules/
+contract/out/
+.DS_Store
