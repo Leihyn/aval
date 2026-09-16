@@ -227,11 +227,20 @@ Public · Apache-2.0 · carries the `midnightntwrk` topic label (verified presen
 
 ---
 
-## Live demo
+## Live demo  *(optional, but fill it)*
 
-**Leave blank.**
+```
+https://aval-dusky.vercel.app
+```
 
-The frontend runs locally only; there is no deployed URL. Pointing this field at the repo would misuse it, and an empty optional field costs nothing.
+The frontend, deployed. Verified after deploy, logged out: HTTP 200, the WASM
+served as `application/wasm`, and a headless Chrome render reporting
+`Midnight runtime ready. Circuits are executing in this browser tab, against
+real ledger state.` with both panes and the `not present` amount row drawn.
+Zero application errors in the console.
+
+It needs no cross-origin isolation headers, because the bundle references
+neither `SharedArrayBuffer` nor `crossOriginIsolated`.
 
 ---
 
