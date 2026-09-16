@@ -16,11 +16,11 @@ const run = async (amount: bigint) => {
   await s.proveFundsInFlight({ secretKey: ALICE, lock: l, required: 1_000n, counterparty: BOB, expiry: EXPIRY, time: 1_000 });
   const hex = (b: Uint8Array) => Buffer.from(b).toString('hex');
   return {
-    attestor: hex(s.public.attestor).slice(0, 32) + '...',
+    attestor: hex(s.public.attestor).slice(0, 16) + '..',
     fills: s.public.fills.toString(),
-    nullifier: [...s.public.spent].map(hex)[0],
+    nullifier: ([...s.public.spent].map(hex)[0] ?? '').slice(0, 16) + '..',
     spent_size: s.public.spent.size().toString(),
-    merkle_root: String(s.public.attestations.root().field).slice(0, 24) + '...',
+    merkle_root: String(s.public.attestations.root().field).slice(0, 16) + '..',
   };
 };
 
@@ -29,11 +29,11 @@ const run = async (amount: bigint) => {
   const b = await run(5_000_000n);
   const keys = Object.keys(a) as (keyof typeof a)[];
   console.log('--- Aval: can an observer tell 50,000 from 5,000,000? ---\n');
-  console.log(`  ${'public ledger field'.padEnd(22)} ${'amount = 50,000'.padEnd(38)} ${'amount = 5,000,000'.padEnd(38)} same?`);
-  console.log('  ' + '-'.repeat(104));
+  console.log(`  ${'public field'.padEnd(14)} ${'amount = 50,000'.padEnd(20)} ${'amount = 5,000,000'.padEnd(20)}  same?`);
+  console.log('  ' + '-'.repeat(72));
   for (const k of keys) {
     const same = a[k] === b[k];
-    console.log(`  ${k.padEnd(22)} ${String(a[k]).padEnd(38)} ${String(b[k]).padEnd(38)} ${same ? 'IDENTICAL' : 'differs'}`);
+    console.log(`  ${k.padEnd(14)} ${String(a[k]).padEnd(20)} ${String(b[k]).padEnd(20)}  ${same ? 'IDENTICAL' : 'DIFFERS'}`);
   }
   console.log('\n  Every field an observer can read is identical except the merkle root,');
   console.log('  and a root is a hash: it commits to the leaf without revealing it.');

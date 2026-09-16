@@ -100,7 +100,21 @@ for i,l in enumerate(cap('seed.txt')[:8]):
     d.text((110,602+i*28),l,font=MS,fill=GREEN if 'absent' in l else (AMBER if l.startswith('$') else FG))
 foot(d,5); slides.append(img)
 
-# 6 security
+# 6 indistinguishability
+img,d=new()
+d.text((80,80),'Can an observer tell 50,000 from 5,000,000?',font=H1,fill=FG)
+d.text((80,160),'Same lock id. Same salt. Same counterparty. Amounts a hundredfold apart.',font=SMALL,fill=DIM)
+pnl(d,80,215,1760,400,'real output, side by side',SKY)
+for i,l in enumerate(cap('indistinguishability.txt')[:9]):
+    col = GREEN if 'IDENTICAL' in l else (AMBER if 'DIFFERS' in l else (AMBER if l.startswith('$') else FG))
+    d.text((110,277+i*32),l,font=MS,fill=col)
+d.rounded_rectangle([80,650,1840,830],radius=12,fill=(8,26,20),outline=GREEN,width=2)
+d.text((112,680),'Every readable field is identical except the merkle root.',font=H2,fill=GREEN)
+wrap(d,'A root is a hash: it commits to the leaf without revealing it. The nullifier is byte-identical across the difference.',BODY,112,738,1660,FG)
+d.text((112,792),'Not an absence you have to trust. An equality you can run.',font=BODY,fill=GREEN)
+foot(d,6); slides.append(img)
+
+# 7 security
 img,d=new()
 d.text((80,70),'Six attacks, six reverts from the circuit',font=H1,fill=FG)
 pnl(d,80,180,1760,300,'real output',ROSE)
@@ -114,9 +128,9 @@ yy=530
 for a,b,c in rows:
     d.text((110,yy),a,font=BODY,fill=FG); d.text((740,yy+4),b,font=SMALL,fill=DIM); d.text((1660,yy),c,font=SMALL,fill=GREEN)
     yy+=54
-foot(d,6); slides.append(img)
+foot(d,7); slides.append(img)
 
-# 7 trust
+# 8 trust
 img,d=new()
 d.text((80,100),'The honest part',font=H1,fill=FG)
 y=wrap(d,'Midnight cannot see Ethereum. There is no trustless answer without a light client, so Aval does not pretend otherwise. It makes the trusted party someone whose trust is free.',BODY,80,215,1760,DIM)
@@ -128,9 +142,9 @@ for i,(t,s) in enumerate([('k-of-n quorum','small multilateral'),('bonded + slas
     d.text((110+i*590,yy+62),t,font=H2,fill=FG); wrap(d,s,SMALL,110+i*590,yy+108,500,DIM)
 d.text((80,yy+200),'Residual: a malicious attestor can fabricate a lock. Same trust model as every fast-finality bridge shipping today.',font=SMALL,fill=DIM)
 d.text((80,yy+232),'Aval adds privacy to that model. It does not claim to beat it.',font=SMALL,fill=DIM)
-foot(d,7); slides.append(img)
+foot(d,8); slides.append(img)
 
-# 8 market / roadmap
+# 9 market / roadmap
 img,d=new()
 d.text((80,100),'One predicate today. The primitive is general.',font=H1,fill=FG)
 rows=[('Wave 1  SHIPPED','funds in flight','amount >= required AND beneficiary == counterparty',GREEN),
@@ -144,9 +158,9 @@ for tag,name,pred,col in rows:
     d.text((760,yy+64),pred,font=M,fill=col); yy+=138
 d.text((80,800),'Buyers: cross-chain treasury desks, OTC, bridge-integrated lenders, invoice factors.',font=BODY,fill=DIM)
 d.text((80,845),'Midnight\'s own 2026 priorities name "institutional execution" and "programmable compliance".',font=BODY,fill=SKY)
-foot(d,8); slides.append(img)
+foot(d,9); slides.append(img)
 
-# 9 close
+# 10 close
 img,d=new()
 d.text((80,330),'Aval',font=T,fill=FG)
 wrap(d,'Act on a fact before that fact is public.',H1,80,460,1700,GREEN)

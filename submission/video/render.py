@@ -163,8 +163,23 @@ d.text((80, 175), 'Produced by real circuit execution, not fixtures.', font=F_SM
 term_panel(d, 80, 240, 1760, 420, read_capture('seed.txt'), 'ledger state after one proof', SKY,
            highlight={'absent by construction': GREEN, 'nullifier ': SKY})
 d.rounded_rectangle([80, 700, 1840, 790], radius=12, fill=(8, 26, 20), outline=GREEN, width=2)
-d.text((110, 725), 'The amount is not on the ledger. It never will be.', font=F_H2, fill=GREEN)
+d.text((110, 725), 'Three attestations registered. One proof spent. No amount written.', font=F_H2, fill=GREEN)
 footer(d); add(img, 12)
+
+# 7b indistinguishability (REAL) — the money shot
+img, d = new_frame()
+d.text((80, 70), 'Can an observer tell 50,000 from 5,000,000?', font=F_H1, fill=FG)
+d.text((80, 150), 'Same lock id. Same salt. Same counterparty. Amounts a hundredfold apart.',
+       font=F_SMALL, fill=DIM)
+term_panel(d, 80, 205, 1760, 460, read_capture('indistinguishability.txt')[:9],
+           'real output, side by side', SKY,
+           highlight={'IDENTICAL': GREEN, 'DIFFERS': AMBER})
+d.rounded_rectangle([80, 610, 1840, 830], radius=12, fill=(8, 26, 20), outline=GREEN, width=2)
+d.text((112, 640), 'Every readable field is identical except the merkle root.', font=F_H2, fill=GREEN)
+wrap(d, 'A root is a hash: it commits to the leaf without revealing it. The nullifier is '
+        'byte-identical across a hundredfold difference in amount.', F_BODY, 112, 700, 1660, FG)
+d.text((112, 782), 'Not an absence you have to trust. An equality you can run.', font=F_BODY, fill=GREEN)
+footer(d); add(img, 15)
 
 # 8 attacks (REAL)
 img, d = new_frame()
