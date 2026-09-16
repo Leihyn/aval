@@ -10,11 +10,19 @@ export default function App() {
   const [error, setError] = useState<string | null>(null);
   const [required, setRequired] = useState('1500000');
   const [busy, setBusy] = useState(false);
+  const [boot, setBoot] = useState<'loading' | 'ready' | 'failed'>('loading');
+  const [bootErr, setBootErr] = useState<string | null>(null);
 
   useEffect(() => {
     bootstrap()
-      .then((s) => { setSim(s); setView(readLedger(s)); })
-      .catch((e) => setError(String(e)));
+      .then((s) => { setSim(s); setView(readLedger(s)); setBoot('ready'); })
+      .catch((e) => {
+        // Surface the real reason rather than hanging on a spinner. The most
+        // likely failure is WASM instantiation for the Midnight runtime.
+        setBoot('failed');
+        setBootErr(e instanceof Error ? `${e.name}: ${e.message}` : String(e));
+        console.error('[aval] bootstrap failed', e);
+      });
   }, []);
 
   const onProve = async () => {
@@ -44,7 +52,29 @@ export default function App() {
         </p>
       </header>
 
-      <section className="mx-auto mt-8 grid max-w-5xl gap-4 md:grid-cols-2">
+      <div className="mx-auto mt-6 max-w-5xl">
+        {boot === 'loading' && (
+          <p className="rounded-lg border border-neutral-800 bg-neutral-950 px-4 py-3 text-sm text-neutral-400">
+            Instantiating the Midnight runtime (WASM)…
+          </p>
+        )}
+        {boot === 'ready' && (
+          <p className="rounded-lg border border-emerald-900 bg-emerald-950/30 px-4 py-3 text-sm text-emerald-300">
+            Midnight runtime ready. Circuits are executing in this browser tab, against real ledger state.
+          </p>
+        )}
+        {boot === 'failed' && (
+          <div className="rounded-lg border border-rose-900 bg-rose-950/30 px-4 py-3">
+            <p className="text-sm font-medium text-rose-300">Runtime failed to start.</p>
+            <pre className="mt-2 overflow-x-auto text-xs text-rose-400">{bootErr}</pre>
+            <p className="mt-2 text-xs text-neutral-400">
+              The contract and its 22 tests are unaffected: run <code>cd contract &amp;&amp; npm test</code>.
+            </p>
+          </div>
+        )}
+      </div>
+
+      <section className="mx-auto mt-6 grid max-w-5xl gap-4 md:grid-cols-2">
         <div className="rounded-xl border border-neutral-800 bg-neutral-950 p-5">
           <h2 className="text-xs font-semibold uppercase tracking-widest text-emerald-400">
             What the counterparty learns
