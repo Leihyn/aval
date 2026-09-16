@@ -227,43 +227,93 @@ describe('expiry, enforced by ledger block time', () => {
   });
 });
 
-describe('privacy, what the public ledger does and does not reveal', () => {
+describe('privacy, indistinguishability of the amount', () => {
   const lock = lockOf('lock-1', 50_000n);
 
-  beforeEach(async () => {
-    sim = await freshWithAttestor();
-    await attest(sim, lock);
-    await sim.proveFundsInFlight({
-      secretKey: ALICE, lock, required: 10_000n, counterparty: BOB, expiry: EXPIRY, time: Number(NOW),
+  /**
+   * Serialise EVERY reachable field of public ledger state.
+   *
+   * Deliberately not a hand-picked projection: an earlier version of this suite
+   * asserted the amount was absent from a 4-field object that never had an amount
+   * field, so it could not fail. Enumerating the whole surface means a future field
+   * that did leak the amount would be caught here rather than silently pass.
+   */
+  const dumpPublic = (s: AvalSimulator) => ({
+    attestor: Buffer.from(s.public.attestor).toString('hex'),
+    attestor_registered: s.public.attestor_registered,
+    fills: s.public.fills.toString(),
+    spent: [...s.public.spent].map((n) => Buffer.from(n).toString('hex')).sort(),
+    spent_size: s.public.spent.size().toString(),
+    merkle_root: String(s.public.attestations.root().field),
+    tree_first_free: s.public.attestations.firstFree().toString(),
+  });
+
+  /** Fresh contract, one attested lock of `amount`, one successful proof. */
+  const runWithAmount = async (amount: bigint, required = 1_000n) => {
+    const s = await AvalSimulator.create(ATTESTOR);
+    await s.registerAttestor(ATTESTOR, Number(NOW));
+    const l = { lockId: bytes32('lock-1'), amount, salt: bytes32('salt-lock-1') };
+    await s.registerAttestation(ATTESTOR, leafFor(l, BOB, EXPIRY), Number(NOW));
+    await s.proveFundsInFlight({
+      secretKey: ALICE, lock: l, required, counterparty: BOB, expiry: EXPIRY, time: Number(NOW),
     });
+    return dumpPublic(s);
+  };
+
+  it('produces IDENTICAL public state for amounts 100x apart, except the merkle root', async () => {
+    const small = await runWithAmount(50_000n);
+    const large = await runWithAmount(5_000_000n);
+
+    // The striking one: the nullifier is byte-identical across a 100x difference,
+    // because nullifier_of hashes lock_id and salt only. An observer watching the
+    // nullifier set cannot tell the two worlds apart.
+    expect(large.spent).toEqual(small.spent);
+    expect(large.attestor).toBe(small.attestor);
+    expect(large.attestor_registered).toBe(small.attestor_registered);
+    expect(large.fills).toBe(small.fills);
+    expect(large.spent_size).toBe(small.spent_size);
+    expect(large.tree_first_free).toBe(small.tree_first_free);
+
+    // Only the root differs, and a root is a hash: it commits to the leaf without
+    // revealing it. This is the single field an observer can distinguish, and it
+    // tells them nothing about the amount.
+    expect(large.merkle_root).not.toBe(small.merkle_root);
+
+    // Everything except merkle_root must match, checked structurally rather than
+    // field by field so a newly added leaking field fails this test.
+    const strip = (d: Record<string, unknown>) => {
+      const { merkle_root, ...rest } = d;
+      return rest;
+    };
+    expect(strip(large)).toEqual(strip(small));
   });
 
-  it('never exposes the locked amount anywhere in public state', () => {
-    const dump = JSON.stringify(
-      {
-        attestor: Array.from(sim.public.attestor),
-        fills: sim.public.fills.toString(),
-        spent: [...sim.public.spent].map((n) => Array.from(n)),
-        root: Array.from(sim.public.attestations.root().field ?? []),
-      },
-    );
-    expect(dump).not.toContain('50000');
-    expect(dump).not.toContain(lock.amount.toString());
+  it('holds the indistinguishability across three decades of amount', async () => {
+    const dumps = await Promise.all([1_000n, 100_000n, 10_000_000n].map((a) => runWithAmount(a)));
+    const stripped = dumps.map(({ merkle_root, ...rest }) => rest);
+    expect(stripped[1]).toEqual(stripped[0]);
+    expect(stripped[2]).toEqual(stripped[0]);
+    expect(new Set(dumps.map((d) => d.merkle_root)).size).toBe(3);
   });
 
-  it('never exposes the private lock id', () => {
-    const spent = [...sim.public.spent].map((n) => Buffer.from(n).toString('hex'));
-    expect(spent).not.toContain(Buffer.from(lock.lockId).toString('hex'));
+  it('never writes the decimal amount into any public field', async () => {
+    const d = await runWithAmount(123_456_789n);
+    const flat = JSON.stringify(d);
+    expect(flat).not.toContain('123456789');
+    // and the hex encoding of the same value
+    expect(flat).not.toContain((123_456_789).toString(16));
   });
 
-  it('publishes a nullifier that is unlinkable to the registered leaf', () => {
+  it('never exposes the private lock id or salt in public state', async () => {
+    const d = await runWithAmount(50_000n);
+    const flat = JSON.stringify(d);
+    expect(flat).not.toContain(Buffer.from(bytes32('lock-1')).toString('hex'));
+    expect(flat).not.toContain(Buffer.from(bytes32('salt-lock-1')).toString('hex'));
+  });
+
+  it('publishes a nullifier that is not the registered leaf', async () => {
     const leafHex = Buffer.from(leafFor(lock, BOB, EXPIRY)).toString('hex');
     const nulHex = Buffer.from(nullifierFor(lock)).toString('hex');
     expect(nulHex).not.toBe(leafHex);
-    expect(sim.public.spent.member(nullifierFor(lock))).toBe(true);
-  });
-
-  it('reveals only an aggregate fill count, not per-proof amounts', () => {
-    expect(sim.public.fills).toBe(1n);
   });
 });

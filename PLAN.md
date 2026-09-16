@@ -422,19 +422,23 @@ Expected: `Apache License`
 
 These are the two cheapest gate failures to hit.
 
-<!-- [CRITIQUE] Verified 2026-09-16T04:23Z: `git remote -v` in this repo returns NOTHING.
-     There is no GitHub remote. Five commits exist locally and none of them are pushed.
-     The gate is not "add a topic to the repo", it is "the repo does not exist yet".
-     Until `git remote -v` shows an origin and the repo is public, three separate gate
-     items (public repo, topic label, Apache-2.0 visible) are all unmet at once. -->
+<!-- [CRITIQUE] At 04:23Z `git remote -v` returned NOTHING and this was logged as an
+     auto-DQ blocker. RESOLVED CONCURRENTLY at 04:26-04:34Z by the conductor. Re-verified
+     at 04:50Z: origin = https://github.com/Leihyn/aval, HTTP 200, private=false,
+     topics include `midnightntwrk`, license spdx_id = Apache-2.0, pushed_at
+     2026-09-16T04:34:09Z. The gate item is MET. Step 0 is retained as a re-check because
+     it is the cheapest way to score zero with working code, and because a force-push or
+     a repo rename would silently un-meet it. -->
 
-0. **The repo has no remote.** Verify first, before anything else:
+0. **Re-verify the repo gate.** It was met at 04:34Z; confirm it is still met before submitting:
    ```bash
-   git remote -v                 # currently EMPTY
-   gh repo create aval --public --source=. --remote=origin --push
-   git remote -v && git log --oneline -1
+   git remote -v                                        # expect origin -> Leihyn/aval
+   git status -sb                                       # expect nothing unpushed
+   curl -s https://api.github.com/repos/Leihyn/aval | \
+     python3 -c "import sys,json;d=json.load(sys.stdin);print(d['private'],d['topics'],d['license']['spdx_id'])"
    ```
-   Then load the public URL in a logged-out browser and confirm it renders.
+   Expect `False`, a topic list containing `midnightntwrk`, and `Apache-2.0`. Then load
+   the public URL in a logged-out browser and confirm the README renders.
 1. `LICENSE` must exist at the repo root and be Apache-2.0. Verify: `head -2 LICENSE`.
 2. The GitHub repo must carry the **`midnightntwrk` topic label**. This is a repository topic, not a file, and it is invisible from the local clone.
    ```bash

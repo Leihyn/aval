@@ -1,0 +1,14 @@
+$ npx tsx scripts/indistinguishability.ts
+--- Aval: can an observer tell 50,000 from 5,000,000? ---
+
+  public ledger field    amount = 50,000                        amount = 5,000,000                     same?
+  --------------------------------------------------------------------------------------------------------
+  attestor               06b9adbc74b16b6310ac8d6956ebc680...    06b9adbc74b16b6310ac8d6956ebc680...    IDENTICAL
+  fills                  1                                      1                                      IDENTICAL
+  nullifier              913026c16dbac7908b9c9cc35a2e3b4f0f59ee0fb1a33aad493172bc331ae45e 913026c16dbac7908b9c9cc35a2e3b4f0f59ee0fb1a33aad493172bc331ae45e IDENTICAL
+  spent_size             1                                      1                                      IDENTICAL
+  merkle_root            156929904683918661212229...            155683403668170556933635...            differs
+
+  Every field an observer can read is identical except the merkle root,
+  and a root is a hash: it commits to the leaf without revealing it.
+  The nullifier is byte-identical across a 100x difference in amount.

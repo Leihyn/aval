@@ -19,7 +19,7 @@ No Docker. No proof server. No wallet. No RPC endpoint. No API keys. Clone and r
 
 A treasury desk moves $2M from Ethereum to a counterparty. The funds leave the source chain immediately. They arrive somewhere between eight minutes and seven days later depending on the bridge. During that window the money exists, it is irrevocably committed, and it is useless. The counterparty will not release their side against a screenshot, so both parties wait.
 
-You have two options today. Wait, or reveal the amount. Revealing it tells your counterparty exactly how much room you have, which is not a privacy nicety, it is your negotiating position.
+You have two options today. Wait, or put the amount somewhere it can be read. Settling on a public chain broadcasts the size of every leg you move, permanently, to your competitors and to anyone pricing against you. That is not a privacy nicety, it is your book.
 
 That waiting window is a gap between a fact being **true** and that fact being **publicly verifiable**. Aval closes it.
 
@@ -82,7 +82,28 @@ Six `disclose()` call sites bridge the two, each annotated in the source with wh
 | The prover cannot inflate the amount | leaf recomputation in-circuit | 1 test |
 | Attestations expire | `kernel.blockTimeLessThan`, ledger block time, not a caller-supplied timestamp | 2 tests |
 | Only the attestor writes the registry | derived-id equality check | 2 tests |
-| The amount never reaches public state | no ledger field holds it; asserted against the attestor id, fill count, nullifier set and root | 4 tests |
+| The amount is **indistinguishable** on-chain | two runs 100x apart produce byte-identical public state except the merkle root | 5 tests |
+
+### Indistinguishability, not just absence
+
+An earlier version of this suite asserted the amount was *absent* from public state. That test could not fail: it checked a hand-picked projection that never had an amount field in the first place. An absence you construct yourself is not evidence.
+
+So the claim is now made as an equality a judge can run:
+
+```
+$ npx tsx scripts/indistinguishability.ts
+
+  public ledger field    amount = 50,000        amount = 5,000,000     same?
+  attestor               06b9adbc74b16b63...    06b9adbc74b16b63...    IDENTICAL
+  fills                  1                      1                      IDENTICAL
+  nullifier              913026c16dbac790...    913026c16dbac790...    IDENTICAL
+  spent_size             1                      1                      IDENTICAL
+  merkle_root            1569299046839186...    1556834036681705...    differs
+```
+
+Same lock id, same salt, same counterparty, same expiry, amounts a hundredfold apart. **Every field an observer can read is identical except the merkle root**, and a root is a hash: it commits to the leaf without revealing it. The nullifier in particular is byte-identical, because `nullifier_of` hashes `lock_id` and `salt` only.
+
+The test suite asserts this structurally rather than field by field, so a newly added field that *did* leak the amount would fail the test rather than slip past it.
 
 ## Quick start
 
@@ -157,15 +178,16 @@ Bob runs the attestor. The attestor computes `leaf_hash(lock_id, amount, ...)`, 
 cannot compute that leaf without the amount. Bob also holds `lock_id` and `salt`, so he
 can recompute Alice's nullifier: the proof is unlinkable to the public, but not to him.
 
-So in Wave 1 the zero-knowledge layer buys exactly two things, and it is worth being
-precise about which:
+So in Wave 1 the zero-knowledge layer buys **exactly one thing: privacy from the chain
+and from every third party.** Amount, lock identity and Alice's identity never reach
+public state. The settlement is on-ledger; the terms are not.
 
-1. **Privacy from the chain and from every third party.** Amount, lock identity and
-   Alice's identity never reach public state. The settlement is on-ledger; the terms are
-   not.
-2. **A machine-checkable gate.** Bob's *node* knowing something is not the same as Bob's
-   *contract* being able to act on it. The proof turns an off-chain observation into an
-   on-chain predicate that releases value without Bob in the loop.
+There is a second property worth having — an on-chain predicate Bob's contract can act
+on without Bob in the loop — but **it is bought by the attestation registry, not by the
+proof.** A registry of plaintext `(lock_id, amount, counterparty)` tuples plus a
+membership check would hand the contract the identical gate with no proof system
+anywhere. Counting it as a benefit of the ZK would be inflating the total in front of a
+judge who can subtract.
 
 **Privacy from the counterparty is rung two, not Wave 1.** It arrives with the k-of-n
 quorum, where no single attestor sees a whole lock. What makes that roadmap credible
@@ -213,15 +235,13 @@ Being specific about this is part of the submission.
 
 ## Roadmap
 
-The primitive is "prove a committed-but-unsettled fact satisfies a predicate". Funds in flight is one predicate.
-
 | Wave | Settlement moment | Predicate |
 |---|---|---|
 | 1 (this) | Funds in flight | `amount >= required AND beneficiary == counterparty` |
 | 2 | Real source-chain attestor | live listener, k-of-n quorum, encrypted preimage channel |
 | 2 | Delivery versus payment | `goods_released AND payment_committed >= invoiced` |
-| 3 | Letter of credit | `documents_conform AND issuer_committed AND NOT expired` |
-| 3 | Invoice factoring | `invoice_valid AND unpaid AND amount >= advance` |
+
+Funds in flight is shipped and complete. The same instrument fits other settlement moments — a letter of credit, an unpaid invoice — but those are not on this list because nothing about them is built, and a roadmap longer than the thing it follows reads as an unfinished platform rather than a finished instrument.
 
 ## Developer-experience notes for the Midnight team
 

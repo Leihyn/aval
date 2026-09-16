@@ -52,15 +52,24 @@ compute that leaf without the amount. He can also recompute Alice's nullifier, s
 proof is unlinkable to the public but not to him. Saying otherwise would be false, so
 we do not say it.
 
-What the zero-knowledge layer buys in that deployment is therefore precise, and it is
-two things, not three:
+What the zero-knowledge layer buys in that deployment is therefore **exactly one thing:
+privacy from the chain and from every third party.** The amount, the lock identity and
+Alice's identity never reach public state. Deal *terms* stay off the ledger even though
+the *settlement* is on it.
 
-1. **Privacy from the chain and from every third party.** The amount, the lock identity
-   and Alice's identity never reach public state. Deal *terms* stay off the ledger even
-   though the *settlement* is on it.
-2. **A machine-checkable gate.** Bob's node knowing something is not the same as Bob's
-   contract being able to act on it. The proof converts an off-chain observation into an
-   on-chain predicate that releases value without Bob in the loop.
+<!-- [CRITIQUE E-4, corrected] An earlier revision of this section claimed the ZK bought
+     TWO things, the second being "a machine-checkable gate". That was wrong and a
+     parallel adversarial read caught it. A registry of plaintext
+     (lock_id, amount, counterparty) tuples plus a membership check gives Bob's contract
+     the identical on-chain predicate with no proof system anywhere. The gate is bought
+     by the registry, not by the proof. Do not restore the two-item version: a judge who
+     can subtract will notice, and being caught padding the benefit list costs more than
+     the padded item was worth. -->
+
+A second property is worth having and must be attributed correctly: an on-chain
+predicate Bob's contract can act on without Bob in the loop. **That is bought by the
+attestation registry, not by the proof.** It is real value; it is not the ZK doing the
+work.
 
 **Privacy from the counterparty is a roadmap property, not a Wave 1 one.** It arrives
 with the k-of-n attestor quorum, where no single attestor sees a whole lock. The

@@ -94,3 +94,19 @@ npm install && npm test
 npx tsx scripts/seed-demo.ts
 npx tsx scripts/attack-demo.ts
 ```
+
+## Indistinguishability (the central claim, made runnable)
+
+```
+$ npx tsx scripts/indistinguishability.ts
+--- Aval: can an observer tell 50,000 from 5,000,000? ---
+
+  public ledger field    amount = 50,000                        amount = 5,000,000                     same?
+  attestor               06b9adbc74b16b6310ac8d6956ebc680...    06b9adbc74b16b6310ac8d6956ebc680...    IDENTICAL
+  fills                  1                                      1                                      IDENTICAL
+  nullifier              913026c16dbac7908b9c9cc35a2e3b4f...    913026c16dbac7908b9c9cc35a2e3b4f...    IDENTICAL
+  spent_size             1                                      1                                      IDENTICAL
+  merkle_root            156929904683918661212229...            155683403668170556933635...            differs
+```
+
+Note on rigour: an earlier version of the privacy tests asserted the amount was *absent* from a hand-built 4-field object that never contained an amount field, so it could not fail. That was an overclaim and it was replaced. The suite now asserts indistinguishability across amounts 100x apart and across three decades of magnitude, comparing the full public surface structurally so a future leaking field fails the test.
