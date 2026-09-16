@@ -1,0 +1,157 @@
+pragma language_version >= 0.16;
+
+// Aval, proof of funds in flight.
+//
+// A party (Alice) locks funds in an escrow on a source chain. The lock is real,
+// irrevocable, and uniquely identified, but a Midnight contract cannot see another
+// chain. An attestor that CAN see the source chain registers a commitment to the
+// lock here. Alice then proves, in zero knowledge, that she holds a preimage of a
+// registered commitment whose amount clears a threshold, without revealing the
+// amount, the lock id, or which attestation she used.
+//
+// DUAL-LEDGER SUMMARY
+//   Private (witness, never written):  lock_id, amount, salt, merkle path
+//   Public  (ledger, written):         merkle root, nullifier, fill counter, attestor id
+//   Bridged by disclose():             6 call sites, each justified inline.
+//
+// Note on disclose(): it does not itself publish anything. It clears the compiler's
+// private-data check so a value may cross into a public position; the ledger write is
+// what makes it visible. Every disclose() below is annotated with what an observer
+// actually learns.
+
+import CompactStandardLibrary;
+
+// ─────────────────────────────── Public ledger ───────────────────────────────
+
+// Commitments to source-chain locks, registered by the attestor.
+// Historic tree: a proof stays valid against an older root as the tree grows,
+// so Alice's proof does not break when another attestation is added mid-flight.
+export ledger attestations: HistoricMerkleTree<10, Bytes<32>>;
+
+// Spent nullifiers. One registered lock can back exactly one proof, ever.
+export ledger spent: Set<Bytes<32>>;
+
+// The attestor's derived public identifier.
+export ledger attestor: Bytes<32>;
+export ledger attestor_registered: Boolean;
+
+// Count of successful proofs. Public, aggregate, reveals no individual amount.
+export ledger fills: Counter;
+
+// ──────────────────────────────── Private state ──────────────────────────────
+
+witness local_secret_key(): Bytes<32>;
+witness get_lock_id(): Bytes<32>;
+witness get_amount(): Uint<64>;
+witness get_salt(): Bytes<32>;
+witness find_path(leaf: Bytes<32>): MerkleTreePath<10, Bytes<32>>;
+
+// ────────────────────────────── Pure helpers ─────────────────────────────────
+
+// Domain-separated identity derivation. Same pattern as the attestor id.
+export pure circuit derive_id(sk: Bytes<32>): Bytes<32> {
+  return persistentHash<Vector<2, Bytes<32>>>([pad(32, "aval:attestor:v1"), sk]);
+}
+
+// The commitment an attestor registers for one source-chain lock.
+//
+// counterparty and expiry are bound INTO the leaf even though both are public
+// circuit arguments. That binding is what stops Alice replaying an attestation
+// issued for Bob against a different counterparty, or past its expiry: change
+// either value and the recomputed leaf no longer matches any registered leaf.
+export pure circuit leaf_hash(
+  lock_id: Bytes<32>,
+  amount: Uint<64>,
+  counterparty: Bytes<32>,
+  expiry: Uint<64>
+, salt: Bytes<32>): Bytes<32> {
+  const amount_b = (amount as Field) as Bytes<32>;
+  const expiry_b = (expiry as Field) as Bytes<32>;
+  const inner = persistentHash<Vector<3, Bytes<32>>>([lock_id, amount_b, salt]);
+  return persistentHash<Vector<3, Bytes<32>>>([inner, counterparty, expiry_b]);
+}
+
+// Nullifier for a registered lock. Derived from the PRIVATE lock_id and salt, so
+// it is unlinkable to the leaf by an observer, yet deterministic for the holder.
+export pure circuit nullifier_of(lock_id: Bytes<32>, salt: Bytes<32>): Bytes<32> {
+  return persistentHash<Vector<3, Bytes<32>>>([pad(32, "aval:nul:v1"), lock_id, salt]);
+}
+
+// ──────────────────────────────── Circuits ───────────────────────────────────
+
+// One-time attestor bootstrap. In the bilateral deployment the counterparty runs
+// this themselves, which is why the trust assumption collapses: they are attesting
+// to what their own node observed on the source chain.
+export circuit register_attestor(): [] {
+  assert(!attestor_registered, "attestor already registered");
+  const id = derive_id(local_secret_key());
+  // DISCLOSE 1/6, publishes the attestor's derived public id. Intended: the whole
+  // point is that everyone can see which attestor this deployment trusts. The
+  // secret key itself never leaves the witness.
+  attestor = disclose(id);
+  attestor_registered = true;
+}
+
+// Register a commitment to an observed source-chain lock. Attestor-only.
+//
+// Note: Compact treats even exported-circuit PARAMETERS as private until disclosed,
+// not just witnesses. A caller supplies arguments inside the proof, so nothing is
+// public until an explicit disclose() puts it there. `leaf` therefore needs one.
+export circuit register_attestation(leaf: Bytes<32>): [] {
+  assert(attestor_registered, "no attestor registered");
+  const id = derive_id(local_secret_key());
+  // DISCLOSE 2/6, publishes only the BOOLEAN "caller is the attestor", not the
+  // caller's key. A single bit, and it is the access-control decision itself.
+  assert(disclose(id == attestor), "caller is not the attestor");
+  // DISCLOSE 3/6, publishes the commitment itself. Intended: the registry of
+  // outstanding lock commitments is public by design. A leaf is a hash, so it
+  // reveals no amount, no lock id, and no counterparty on its own.
+  attestations.insert(disclose(leaf));
+}
+
+// The money circuit. Prove a registered lock clears `required` for `counterparty`
+// and has not expired, without revealing the amount or which lock it was.
+//
+// Public args are deliberately public: `required` is the counterparty's own
+// threshold, `counterparty` is who is being paid, `expiry` is not sensitive.
+// The amount and lock identity stay private.
+export circuit prove_funds_in_flight(
+  required: Uint<64>,
+  counterparty: Bytes<32>,
+  expiry: Uint<64>
+): [] {
+  const lock_id = get_lock_id();
+  const amount  = get_amount();
+  const salt    = get_salt();
+
+  const leaf = leaf_hash(lock_id, amount, counterparty, expiry, salt);
+  const path = find_path(leaf);
+
+  // DISCLOSE (root), publishes the Merkle ROOT computed from the private path, not
+  // the path and not the leaf. The root is already public ledger state, so this
+  // reveals nothing new. Critically it does NOT reveal WHICH leaf was used, so the
+  // proof is unlinkable to a specific registered attestation.
+  const root = disclose(merkleTreePathRoot<10, Bytes<32>>(path));
+  assert(attestations.checkRoot(root), "attestation not registered");
+
+  // Real on-chain expiry. Enforced by the ledger's own block time, not by a
+  // timestamp the caller passes in, so the prover cannot backdate it.
+  // DISCLOSE 4/6, publishes the expiry bound being checked. Deliberate: expiry is
+  // not sensitive, and it is bound into the leaf, so the prover cannot alter it
+  // without invalidating the Merkle proof.
+  assert(kernel.blockTimeLessThan(disclose(expiry)), "attestation expired");
+
+  // DISCLOSE 5/6, publishes only the BOOLEAN "amount >= required". The amount
+  // itself is never written. An observer learns the threshold was cleared and
+  // nothing more.
+  assert(disclose(amount >= required), "locked amount below required threshold");
+
+  // DISCLOSE 6/6, publishes the nullifier. It is a domain-separated hash of the
+  // private lock_id and salt, so it is one-way and unlinkable to the leaf, but
+  // stable enough to make double-spending the same lock impossible.
+  const nul = disclose(nullifier_of(lock_id, salt));
+  assert(!spent.member(nul), "this lock has already backed a proof");
+  spent.insert(nul);
+
+  fills.increment(1);
+}

@@ -222,6 +222,37 @@ wins has not been audited:
 
 **Residual assumption, stated plainly:** a malicious attestor can fabricate a lock that does not exist. That is the same trust model as every fast-finality bridge shipping today. Aval adds privacy to that model. It does not claim to beat it.
 
+## Compiles against the deployed ledger, not just the newest one
+
+Worth separating two things that are easy to conflate: "we did not deploy" and "it would not deploy".
+
+The default toolchain (0.34.0) targets **ledger 9**, which is not live on Preprod. So the contract
+was also compiled against **ledger 8**, which is what Preprod actually runs. It compiles clean,
+with a one-line change to the `pragma language_version` floor and nothing else:
+
+```bash
+compact update 0.31 --no-set-default
+compact compile +0.31.1 contract/src-ledger8/inflight.compact contract/out-ledger8
+# Compiling 3 circuits:
+```
+
+| | canonical | ledger-8 evidence build |
+|---|---|---|
+| toolchain | 0.34.0 | 0.31.1 |
+| language | 0.26.0 | 0.23.0 |
+| **ledger** | 9.1.0.0-rc.3 | **8.0.2** (Preprod) |
+| runtime | 0.19.0 | 0.16.0 |
+| artifacts | `contract/out/` | `contract/out-ledger8/` |
+
+Both builds are in the repo. `contract/out/` is canonical and is what the tests import;
+`contract/out-ledger8/` is there so the claim can be checked rather than taken on trust.
+The sources differ by exactly one line, which `diff` will confirm.
+
+**So deployment is gated on tooling, not on the contract.** Specifically: the only proof
+provider in the JS SDK is an HTTP client to a local Midnight proof server, which needs a
+container runtime, and the Preprod faucet is browser-based with a CAPTCHA. Those were the
+blockers, and neither is a property of this code.
+
 ## What is NOT built
 
 Being specific about this is part of the submission.

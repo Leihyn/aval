@@ -2,13 +2,22 @@
 
 /* ───────────────────────────────────────────────────────────────────────────
    Aval design tokens.
-   Institutional finance meets cryptography: restrained, precise, dense.
-   Two semantic accents encode the product argument itself —
-   SIGNAL (emerald) is what the counterparty learns,
-   LEDGER (sky) is what the public chain learns.
+
+   A settlement desk at 2am. Institutional finance meets cryptography:
+   restrained, precise, dense. The interface is an instrument that is switched
+   on, not a landing page — depth comes from one-pixel borders and surface
+   elevation steps, never from shadow or blur.
+
+   Two semantic accents encode the product argument itself:
+     SIGNAL (emerald) — what the counterparty learns
+     LEDGER (sky)     — what the public chain learns
+   These are never decorative. A surface is tinted only when it belongs to one
+   of those two audiences.
    ─────────────────────────────────────────────────────────────────────────── */
 @theme {
-  /* surfaces, near-black with a blue cast for "Midnight" */
+  /* ── Surfaces. A strict elevation ladder; each step up is lighter.
+        950 page ground · 900 public surface · 850 private surface
+        800 hairlines and inner rows · 700/600 borders                       */
   --color-base-950: #05060a;
   --color-base-900: #0a0b12;
   --color-base-850: #0e1018;
@@ -16,12 +25,13 @@
   --color-base-700: #1e2130;
   --color-base-600: #2a2e40;
 
-  /* text */
+  /* ── Text. Three weights of presence. ink-500 is the dimmest permitted and
+        still clears 4.5:1 on every surface it is allowed to sit on.          */
   --color-ink-100: #eceef5;
   --color-ink-300: #a8adc0;
-  --color-ink-500: #6b7189;
+  --color-ink-500: #757b94;
 
-  /* semantic accents */
+  /* ── Semantic accents. */
   --color-signal-400: #34d399;   /* counterparty knowledge */
   --color-signal-900: #06281d;
   --color-ledger-400: #56b6f0;   /* public chain knowledge */
@@ -30,7 +40,39 @@
   --color-danger-400: #f2607a;
   --color-danger-900: #2a0d15;
 
-  /* exactly two radii */
+  /* ── Type scale. Five steps, no others.
+        micro   field labels and eyebrows, uppercase, tracked
+        body    dense prose inside panes
+        value   monospace figures that get compared side by side
+        read    the one paragraph a viewer actually reads
+        lede    a verdict — the answer, not the explanation
+        display the wordmark                                                  */
+  --text-micro: 0.6875rem;
+  --text-micro--line-height: 1.25;
+  --text-micro--letter-spacing: 0.12em;
+
+  --text-body: 0.8125rem;
+  --text-body--line-height: 1.6;
+
+  --text-value: 0.875rem;
+  --text-value--line-height: 1.45;
+
+  --text-read: 0.9375rem;
+  --text-read--line-height: 1.65;
+
+  --text-lede: 1.0625rem;
+  --text-lede--line-height: 1.4;
+  --text-lede--letter-spacing: -0.01em;
+
+  --text-display: clamp(1.5rem, 1.15rem + 1.5vw, 2rem);
+  --text-display--line-height: 1.1;
+  --text-display--letter-spacing: -0.02em;
+
+  /* ── Exactly two radii. Referenced as rounded-card / rounded-control.
+        NOTE: `rounded-[--radius-card]` is Tailwind v3 syntax. Under v4 it
+        emits the literal `border-radius: --radius-card`, which the browser
+        discards — every surface silently renders square. Use the theme-
+        generated utility names below, or the v4 `rounded-(--radius-card)`.   */
   --radius-card: 14px;
   --radius-control: 8px;
 
@@ -59,6 +101,24 @@ body {
 
 /* Tabular figures everywhere numbers are compared side by side. */
 .tnum { font-variant-numeric: tabular-nums; }
+
+/* ── Signature element: the split rule.
+      A two-pixel cap in the pane's own accent on the top edge of each pane
+      (`border-t-2 border-t-signal-400` / `-ledger-400`). Side by side the two
+      panes form one continuous two-tone rule that previews the product's whole
+      argument before a word is read. Solid colour, never a gradient — and a
+      border, so the product ships with no box-shadow anywhere at all.
+
+   ── Shadow philosophy: NONE. Every step of depth in this interface is a
+      one-pixel border or a surface-elevation step. There is no `shadow-*`,
+      no `drop-shadow-*`, and no `backdrop-blur` in the codebase.             */
+
+/* The one motion in the product: a result arriving. 2px, 180ms, no spring. */
+@keyframes f-rise {
+  from { opacity: 0; transform: translateY(2px); }
+  to   { opacity: 1; transform: none; }
+}
+.f-rise { animation: f-rise 180ms ease-out both; }
 
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after {
