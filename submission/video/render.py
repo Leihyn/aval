@@ -181,6 +181,14 @@ wrap(d, 'A root is a hash: it commits to the leaf without revealing it. The null
 d.text((112, 782), 'Not an absence you have to trust. An equality you can run.', font=F_BODY, fill=GREEN)
 footer(d); add(img, 15)
 
+# 7c the actual product, real browser screenshot
+img = Image.open(os.path.join(OUT, 'ui-panes.png')).convert('RGB')
+d = ImageDraw.Draw(img)
+d.text((110, 84), 'The product, running in a browser', font=F_H1, fill=FG)
+d.text((110, 168), 'Real screenshot. Circuits execute in the page against real ledger state, no server, no wallet.',
+       font=F_SMALL, fill=DIM)
+footer(d); add(img, 14)
+
 # 8 attacks (REAL)
 img, d = new_frame()
 d.text((80, 70), 'Try to cheat it', font=F_H1, fill=FG)

@@ -110,3 +110,38 @@ $ npx tsx scripts/indistinguishability.ts
 ```
 
 Note on rigour: an earlier version of the privacy tests asserted the amount was *absent* from a hand-built 4-field object that never contained an amount field, so it could not fail. That was an overclaim and it was replaced. The suite now asserts indistinguishability across amounts 100x apart and across three decades of magnitude, comparing the full public surface structurally so a future leaking field fails the test.
+
+## Verified in a real browser (headless Chromium)
+
+The frontend is not a mock: it imports the same simulator the tests use and executes the
+compiled circuits in the page. Verified by driving a real browser, not by assertion.
+
+| Check | Result |
+|---|---|
+| Midnight WASM runtime instantiates | `boot: ready` |
+| Ledger pane `amount` row | reads `not present` |
+| Indistinguishability auto-run | 4 IDENTICAL / 1 DIFFERS (only the merkle root moves) |
+| Clicking "Prove funds in flight" | threshold cleared, release path shown, `fills` goes to 1 |
+| Console errors | none |
+
+Screenshots: `submission/screenshots/ui-initial.png`, `submission/screenshots/ui-after-proof.png`.
+
+### The privacy claim is falsifiable, and was falsified on purpose
+
+The ledger pane states: "This list is re-checked against the live ledger object on every
+update. If one of these ever appeared on chain, this pane would say so."
+
+That claim was tested by deliberately injecting an `amount` field into `readLedger` and
+rebuilding. The first attempt exposed a real bug: an undeclared ledger key made
+`FIELD[k].label` throw at three call sites, so React white-screened instead of rendering
+the failure banner. The claim would have been silently untrue. All three sites were
+guarded, and the injection was re-run: the pane then rendered
+
+```
+Privacy claim failed
+The ledger object exposes: amount
+```
+
+The injection was reverted. This is the same discipline applied to the test suite, where an
+earlier "the amount is absent" assertion could not fail and was replaced with
+indistinguishability.

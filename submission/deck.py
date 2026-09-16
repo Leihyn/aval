@@ -114,6 +114,14 @@ wrap(d,'A root is a hash: it commits to the leaf without revealing it. The nulli
 d.text((112,792),'Not an absence you have to trust. An equality you can run.',font=BODY,fill=GREEN)
 foot(d,6); slides.append(img)
 
+# 6b the product, real screenshot
+from PIL import Image as _I
+_ui=_I.open(os.path.join(HERE,'video','ui-panes.png')).convert('RGB')
+d=ImageDraw.Draw(_ui)
+d.text((110,84),'The product, running in a browser',font=H1,fill=FG)
+d.text((110,168),'Real screenshot. Circuits execute in the page against real ledger state.',font=SMALL,fill=DIM)
+foot(d,7); slides.append(_ui)
+
 # 7 security
 img,d=new()
 d.text((80,70),'Six attacks, six reverts from the circuit',font=H1,fill=FG)
