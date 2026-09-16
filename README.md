@@ -168,6 +168,19 @@ Everything below was produced by running the code, not by describing it.
 
 `FEATURE-OBSERVABLES.md` lists 13 observables with the exact command that proves each one.
 
+Every number in these docs is checked against the code by a script, not by hand:
+
+```bash
+bash contract/scripts/verify-claims.sh
+# ACTUAL: tests=25 circuits=2 provingfiles=4 disclose=8 ledger8=2
+# ALL CLAIMS VERIFIED against the code
+```
+
+It exists because the numbers drifted four times during the build. One sweep replaced a
+leading digit but not the parenthesised one and shipped "24 passed (22)" into this README.
+The script also asserts the contract embedded in `ARCHITECTURE.md` is byte-identical to
+`contract/src/inflight.compact`, because that had silently gone stale too.
+
 **Toolchain:** compact 0.5.2, compiler 0.34.0, language 0.26.0, runtime 0.19.0.
 
 ## A soundness bug we found, and how you can check the fix
