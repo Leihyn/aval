@@ -12,7 +12,7 @@ The form says: *"Please post a demo video of your product with a public YouTube 
 The video is an MP4, not a YouTube link. **Upload it before filling the form:**
 
 ```
-~/Desktop/dev/aval/submission/video/aval-demo.mp4      157s · 1080p · 2.4MB
+~/Desktop/dev/aval/submission/video/aval-demo.mp4      140s · 1080p · 3.6MB
 ```
 
 Set it **Unlisted** or **Public** (not Private, judges must be able to open it).

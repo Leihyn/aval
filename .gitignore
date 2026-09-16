@@ -8,6 +8,11 @@ contract/node_modules/
 frontend/node_modules/
 frontend/dist/
 submission/video/frames/
+submission/video/frames2/
+# working copies; git history holds the shipped aval-demo.mp4
+submission/video/aval-demo-v1-safe.mp4
+submission/video/aval-demo-v2.mp4
+submission/video/__pycache__/
 .pipeline/
 .conductor-state.json
 .conductor-state.json.bak
