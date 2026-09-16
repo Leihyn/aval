@@ -12,6 +12,11 @@ submission/video/frames2/
 # working copies; git history holds the shipped aval-demo.mp4
 submission/video/aval-demo-v1-safe.mp4
 submission/video/aval-demo-v2.mp4
+submission/video/aval-demo-v3.mp4
+# regenerable: python3 narration.py && python3 build_audio.py
+submission/video/audio/
+submission/video/narration.wav
+submission/video/narration-norm.wav
 submission/video/__pycache__/
 .pipeline/
 .conductor-state.json

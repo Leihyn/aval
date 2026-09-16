@@ -1,0 +1,123 @@
+1
+00:00:00,550 --> 00:00:05,617
+Aval proves that money is committed, but has not yet arrived.
+
+2
+00:00:06,167 --> 00:00:11,682
+Two million dollars leaves Ethereum at nine. It lands at nine forty one.
+
+3
+00:00:11,682 --> 00:00:17,359
+For forty one minutes that money is real, it is irrevocable, and it is useless.
+
+4
+00:00:17,359 --> 00:00:22,241
+Nobody releases their side of a trade against a screenshot.
+
+5
+00:00:22,791 --> 00:00:28,886
+The alternative is to settle in public, and broadcast the size of every position you move.
+
+6
+00:00:28,886 --> 00:00:34,865
+Aval does neither. The amount, the lock, and your identity never reach the chain.
+
+7
+00:00:34,865 --> 00:00:38,655
+A root, a nullifier and a count do.
+
+8
+00:00:39,205 --> 00:00:46,655
+It compiles. Two circuits, each with a prover and a verifier.
+
+9
+00:00:47,205 --> 00:00:50,375
+Thirty one tests pass from a clean clone.
+
+10
+00:00:50,375 --> 00:00:55,883
+No Docker, no proof server, no wallet. One command.
+
+11
+00:00:56,433 --> 00:01:01,414
+Same lock, same salt, and amounts a hundred fold apart.
+
+12
+00:01:01,414 --> 00:01:07,161
+Every field an observer can read comes back identical, except the Merkle root.
+
+13
+00:01:07,161 --> 00:01:13,180
+That is not an absence you trust. It is an equality you can run yourself.
+
+14
+00:01:13,730 --> 00:01:15,786
+The proof is single use.
+
+15
+00:01:15,786 --> 00:01:23,251
+The nullifier comes from the private lock id and salt, so one lock backs exactly one proof, ever.
+
+16
+00:01:23,251 --> 00:01:26,809
+The second proof is turned away at the door.
+
+17
+00:01:27,359 --> 00:01:34,360
+It runs in a browser. Real circuits, executing in the page, against real ledger state.
+
+18
+00:01:34,360 --> 00:01:41,075
+On the left, what the counterparty learns. On the right, everything the chain knows.
+
+19
+00:01:41,625 --> 00:01:44,145
+We tried to cheat it six ways.
+
+20
+00:01:44,145 --> 00:01:50,403
+Reuse the lock. Inflate the amount. Redirect the payee. Extend the expiry.
+
+21
+00:01:50,403 --> 00:01:55,795
+Every one is stopped by the circuit, not by application code.
+
+22
+00:01:56,345 --> 00:01:58,516
+Then we broke it ourselves.
+
+23
+00:01:58,516 --> 00:02:04,960
+The Merkle path is a witness. It runs on the prover's machine, and it is never verified.
+
+24
+00:02:04,960 --> 00:02:11,218
+So a hostile prover could return the path of a different leaf, and claim any amount at all.
+
+25
+00:02:11,218 --> 00:02:17,562
+One assert line fixed it. That exploit is now a permanent regression test.
+
+26
+00:02:18,112 --> 00:02:23,929
+Midnight cannot see Ethereum, and there is no trustless answer without a light client.
+
+27
+00:02:23,929 --> 00:02:31,162
+So the counterparty runs the attestor themselves. A malicious attestor can still fabricate a lock.
+
+28
+00:02:31,162 --> 00:02:38,760
+Same model as every fast finality bridge. Aval adds privacy to it, it does not beat it.
+
+29
+00:02:39,310 --> 00:02:41,830
+Funds in flight is one predicate.
+
+30
+00:02:41,830 --> 00:02:49,010
+The roadmap is identity preconditions, private solvency, and invoice factoring.
+
+31
+00:02:49,560 --> 00:02:55,010
+Aval. Act on a fact, before that fact is public.

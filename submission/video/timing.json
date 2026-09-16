@@ -1,0 +1,362 @@
+{
+ "scenes": [
+  {
+   "key": "s_title",
+   "start": 0.0,
+   "dur": 5.617103999999999,
+   "spoken": 5.617103999999999,
+   "cues": [
+    {
+     "text": "Aval proves that money is committed, but has not yet arrived.",
+     "wav": "audio/000.wav",
+     "rel": 0.55,
+     "len": 4.017104,
+     "start": 0.55,
+     "end": 4.567104
+    }
+   ]
+  },
+  {
+   "key": "dead_window",
+   "start": 5.617103999999999,
+   "dur": 16.623667,
+   "spoken": 16.623667,
+   "cues": [
+    {
+     "text": "Two million dollars leaves Ethereum at nine. It lands at nine forty one.",
+     "wav": "audio/001.wav",
+     "rel": 0.55,
+     "len": 5.154896,
+     "start": 6.167103999999999,
+     "end": 11.322
+    },
+    {
+     "text": "For forty one minutes that money is real, it is irrevocable, and it is useless.",
+     "wav": "audio/002.wav",
+     "rel": 6.064896,
+     "len": 5.317417,
+     "start": 11.681999999999999,
+     "end": 16.999416999999998
+    },
+    {
+     "text": "Nobody releases their side of a trade against a screenshot.",
+     "wav": "audio/003.wav",
+     "rel": 11.742313,
+     "len": 3.831354,
+     "start": 17.359417,
+     "end": 21.190771
+    }
+   ]
+  },
+  {
+   "key": "dual_ledger",
+   "start": 22.240771000000002,
+   "dur": 16.414667,
+   "spoken": 16.414667,
+   "cues": [
+    {
+     "text": "The alternative is to settle in public, and broadcast the size of every position you move.",
+     "wav": "audio/004.wav",
+     "rel": 0.55,
+     "len": 5.735375,
+     "start": 22.790771000000003,
+     "end": 28.526146000000004
+    },
+    {
+     "text": "Aval does neither. The amount, the lock, and your identity never reach the chain.",
+     "wav": "audio/005.wav",
+     "rel": 6.6453750000000005,
+     "len": 5.619292,
+     "start": 28.886146000000004,
+     "end": 34.505438000000005
+    },
+    {
+     "text": "A root, a nullifier and a count do.",
+     "wav": "audio/006.wav",
+     "rel": 12.624667,
+     "len": 2.74,
+     "start": 34.865438000000005,
+     "end": 37.60543800000001
+    }
+   ]
+  },
+  {
+   "key": "s_compile",
+   "start": 38.655438000000004,
+   "dur": 8,
+   "spoken": 6.522688,
+   "cues": [
+    {
+     "text": "It compiles. Two circuits, each with a prover and a verifier.",
+     "wav": "audio/007.wav",
+     "rel": 0.55,
+     "len": 4.922688,
+     "start": 39.205438,
+     "end": 44.128126
+    }
+   ]
+  },
+  {
+   "key": "s_tests",
+   "start": 46.655438000000004,
+   "dur": 9.227959000000002,
+   "spoken": 9.227959000000002,
+   "cues": [
+    {
+     "text": "Thirty one tests pass from a clean clone.",
+     "wav": "audio/008.wav",
+     "rel": 0.55,
+     "len": 2.809667,
+     "start": 47.205438,
+     "end": 50.015105
+    },
+    {
+     "text": "No Docker, no proof server, no wallet. One command.",
+     "wav": "audio/009.wav",
+     "rel": 3.7196670000000003,
+     "len": 4.458292,
+     "start": 50.375105000000005,
+     "end": 54.833397000000005
+    }
+   ]
+  },
+  {
+   "key": "s_indist",
+   "start": 55.883397,
+   "dur": 17.297041000000004,
+   "spoken": 17.297041000000004,
+   "cues": [
+    {
+     "text": "Same lock, same salt, and amounts a hundred fold apart.",
+     "wav": "audio/010.wav",
+     "rel": 0.55,
+     "len": 4.620833,
+     "start": 56.433397,
+     "end": 61.05423
+    },
+    {
+     "text": "Every field an observer can read comes back identical, except the Merkle root.",
+     "wav": "audio/011.wav",
+     "rel": 5.530833,
+     "len": 5.387083,
+     "start": 61.41423,
+     "end": 66.80131300000001
+    },
+    {
+     "text": "That is not an absence you trust. It is an equality you can run yourself.",
+     "wav": "audio/012.wav",
+     "rel": 11.277916000000001,
+     "len": 4.969125,
+     "start": 67.161313,
+     "end": 72.13043800000001
+    }
+   ]
+  },
+  {
+   "key": "nullifier",
+   "start": 73.18043800000001,
+   "dur": 13.628271000000002,
+   "spoken": 13.628271000000002,
+   "cues": [
+    {
+     "text": "The proof is single use.",
+     "wav": "audio/013.wav",
+     "rel": 0.55,
+     "len": 1.695104,
+     "start": 73.730438,
+     "end": 75.42554200000001
+    },
+    {
+     "text": "The nullifier comes from the private lock id and salt, so one lock backs exactly one proof, ever.",
+     "wav": "audio/014.wav",
+     "rel": 2.605104,
+     "len": 7.105354,
+     "start": 75.785542,
+     "end": 82.89089600000001
+    },
+    {
+     "text": "The second proof is turned away at the door.",
+     "wav": "audio/015.wav",
+     "rel": 10.070458,
+     "len": 2.507813,
+     "start": 83.25089600000001,
+     "end": 85.75870900000001
+    }
+   ]
+  },
+  {
+   "key": "s_ui",
+   "start": 86.80870900000001,
+   "dur": 14.266687000000001,
+   "spoken": 14.266687000000001,
+   "cues": [
+    {
+     "text": "It runs in a browser. Real circuits, executing in the page, against real ledger state.",
+     "wav": "audio/016.wav",
+     "rel": 0.55,
+     "len": 6.640958,
+     "start": 87.358709,
+     "end": 93.999667
+    },
+    {
+     "text": "On the left, what the counterparty learns. On the right, everything the chain knows.",
+     "wav": "audio/017.wav",
+     "rel": 7.5509580000000005,
+     "len": 5.665729,
+     "start": 94.359667,
+     "end": 100.025396
+    }
+   ]
+  },
+  {
+   "key": "s_attacks",
+   "start": 101.07539600000001,
+   "dur": 14.719626000000002,
+   "spoken": 14.719626000000002,
+   "cues": [
+    {
+     "text": "We tried to cheat it six ways.",
+     "wav": "audio/018.wav",
+     "rel": 0.55,
+     "len": 2.159521,
+     "start": 101.62539600000001,
+     "end": 103.78491700000001
+    },
+    {
+     "text": "Reuse the lock. Inflate the amount. Redirect the payee. Extend the expiry.",
+     "wav": "audio/019.wav",
+     "rel": 3.069521,
+     "len": 5.897917,
+     "start": 104.144917,
+     "end": 110.042834
+    },
+    {
+     "text": "Every one is stopped by the circuit, not by application code.",
+     "wav": "audio/020.wav",
+     "rel": 9.327438,
+     "len": 4.342188,
+     "start": 110.40283400000001,
+     "end": 114.745022
+    }
+   ]
+  },
+  {
+   "key": "soundness",
+   "start": 115.79502200000002,
+   "dur": 21.767021000000003,
+   "spoken": 21.767021000000003,
+   "cues": [
+    {
+     "text": "Then we broke it ourselves.",
+     "wav": "audio/021.wav",
+     "rel": 0.55,
+     "len": 1.811208,
+     "start": 116.34502200000001,
+     "end": 118.15623000000001
+    },
+    {
+     "text": "The Merkle path is a witness. It runs on the prover's machine, and it is never verified.",
+     "wav": "audio/022.wav",
+     "rel": 2.721208,
+     "len": 6.083688,
+     "start": 118.51623000000002,
+     "end": 124.59991800000002
+    },
+    {
+     "text": "So a hostile prover could return the path of a different leaf, and claim any amount at all.",
+     "wav": "audio/023.wav",
+     "rel": 9.164896,
+     "len": 5.897917,
+     "start": 124.95991800000002,
+     "end": 130.85783500000002
+    },
+    {
+     "text": "One assert line fixed it. That exploit is now a permanent regression test.",
+     "wav": "audio/024.wav",
+     "rel": 15.422813000000001,
+     "len": 5.294208,
+     "start": 131.217835,
+     "end": 136.512043
+    }
+   ]
+  },
+  {
+   "key": "s_trust",
+   "start": 137.56204300000002,
+   "dur": 21.198000000000004,
+   "spoken": 21.198000000000004,
+   "cues": [
+    {
+     "text": "Midnight cannot see Ethereum, and there is no trustless answer without a light client.",
+     "wav": "audio/025.wav",
+     "rel": 0.55,
+     "len": 5.45675,
+     "start": 138.11204300000003,
+     "end": 143.56879300000003
+    },
+    {
+     "text": "So the counterparty runs the attestor themselves. A malicious attestor can still fabricate a lock.",
+     "wav": "audio/026.wav",
+     "rel": 6.366750000000001,
+     "len": 6.873167,
+     "start": 143.928793,
+     "end": 150.80196
+    },
+    {
+     "text": "Same model as every fast finality bridge. Aval adds privacy to it, it does not beat it.",
+     "wav": "audio/027.wav",
+     "rel": 13.599917000000001,
+     "len": 6.548083,
+     "start": 151.16196000000002,
+     "end": 157.710043
+    }
+   ]
+  },
+  {
+   "key": "s_roadmap",
+   "start": 158.76004300000002,
+   "dur": 10.249646000000002,
+   "spoken": 10.249646000000002,
+   "cues": [
+    {
+     "text": "Funds in flight is one predicate.",
+     "wav": "audio/028.wav",
+     "rel": 0.55,
+     "len": 2.159521,
+     "start": 159.31004300000004,
+     "end": 161.46956400000005
+    },
+    {
+     "text": "The roadmap is identity preconditions, private solvency, and invoice factoring.",
+     "wav": "audio/029.wav",
+     "rel": 3.069521,
+     "len": 6.130125,
+     "start": 161.82956400000003,
+     "end": 167.95968900000003
+    }
+   ]
+  },
+  {
+   "key": "s_close",
+   "start": 169.00968900000004,
+   "dur": 6,
+   "spoken": 5.663542,
+   "cues": [
+    {
+     "text": "Aval. Act on a fact, before that fact is public.",
+     "wav": "audio/030.wav",
+     "rel": 0.55,
+     "len": 4.063542,
+     "start": 169.55968900000005,
+     "end": 173.62323100000006
+    }
+   ]
+  }
+ ],
+ "total": 175.00968900000004,
+ "voice": "Samantha",
+ "rate": 135,
+ "lead": 0.55,
+ "gap": 0.36,
+ "tail": 1.05
+}

@@ -12,10 +12,19 @@ The form says: *"Please post a demo video of your product with a public YouTube 
 The video is an MP4, not a YouTube link. **Upload it before filling the form:**
 
 ```
-~/Desktop/dev/aval/submission/video/aval-demo.mp4      140s · 1080p · 3.6MB
+~/Desktop/dev/aval/submission/video/aval-demo.mp4      175s · 1080p · narrated · 6.7MB
 ```
 
 Set it **Unlisted** or **Public** (not Private, judges must be able to open it).
+
+The video is narrated and the captions are burned in, so it reads with the sound off.
+Upload the caption track too, so YouTube has real selectable subtitles that its search
+can index:
+
+```
+YouTube Studio -> Subtitles -> Add -> Upload file -> With timing
+~/Desktop/dev/aval/submission/video/aval-demo.srt      31 cues, timed from the audio
+```
 
 Suggested YouTube title (63 chars, no special characters):
 
@@ -300,6 +309,7 @@ Your own handles:
 ## Pre-submit checklist
 
 - [ ] Video uploaded to YouTube, set Unlisted or Public, link opens in a private window
+- [ ] `aval-demo.srt` uploaded as the caption track (English)
 - [ ] Icon uploaded
 - [ ] All 5 gallery images uploaded
 - [ ] About pasted in full, preview renders the headings correctly

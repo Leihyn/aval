@@ -35,7 +35,7 @@ def seg(i, n, a, b):
 
 # ── SCENE: the dead window, animated ────────────────────────────────────────
 def dead_window(secs=13):
-    n=int(secs*FPS); out=[]
+    n = int(round(secs*FPS)); out=[]
     x0,x1,y = 200, 1720, 520
     for i in range(n):
         im,d=frame()
@@ -73,7 +73,7 @@ def dead_window(secs=13):
 
 # ── SCENE: the dual ledger, animated ────────────────────────────────────────
 def dual_ledger(secs=13):
-    n=int(secs*FPS); out=[]
+    n = int(round(secs*FPS)); out=[]
     priv=['lock_id','amount','salt','merkle path','identity']
     pub=[('merkle root',SKY),('nullifier',SKY),('fill count',SKY)]
     for i in range(n):
@@ -121,7 +121,7 @@ def dual_ledger(secs=13):
 def soundness(secs=18):
     """The attack, drawn. The story is that the PATH is swapped, so the path is
     what gets highlighted, with the honest leaf left visible so the swap reads."""
-    n=int(secs*FPS); out=[]
+    n = int(round(secs*FPS)); out=[]
     TOP=270; DY=118
 
     def layout(cx=960):
@@ -208,7 +208,7 @@ def nullifier(secs=10):
     out. A chip left resting on the panel would cover the very row that is the
     reason the second proof was rejected.
     """
-    n = int(secs*FPS); out = []
+    n = int(round(secs*FPS)); out = []
     sx, sy = 300, 470
     bx, by = 1520, 470
     door = bx - 210

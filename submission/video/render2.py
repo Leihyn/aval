@@ -13,7 +13,7 @@ narration: a PDF on a timer. v2 fixes both halves of that.
 Every scene is a function of t in [0,1] so the whole runtime is in motion.
 Frames stream to disk as they are produced; nothing large is held in memory.
 """
-import os, sys, shutil
+import os, sys, shutil, json
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from PIL import Image, ImageDraw, ImageFont
 import anim
@@ -24,6 +24,18 @@ from anim import (W, H, FPS, BG, PANEL, BORDER, FG, DIM, GREEN, SKY, ROSE, AMBER
 OUT = os.path.dirname(os.path.abspath(__file__))
 CAP = os.path.join(OUT, '..', 'captures')
 FR  = os.path.join(OUT, 'frames2')
+TB  = json.load(open(os.path.join(OUT, 'timing.json')))
+
+# The caption band. anim.py's scenes were measured (lowest content row per
+# scene) before this was placed: the deepest is soundness at y=924, so a rule at
+# 938 covers nothing. s_ui is the exception and is cropped below to clear it.
+CAP_RULE, CAP_Y, UI_H = 938, 952, 950
+CAPF = F(SANS, 30)
+
+def caption(d, text):
+    if not text: return
+    d.line([80, CAP_RULE, 1840, CAP_RULE], fill=(34, 34, 44), width=1)
+    d.text((80, CAP_Y), text, font=CAPF, fill=(224, 224, 234))
 
 def cap(name, limit=None):
     with open(os.path.join(CAP, name)) as fh:
@@ -126,16 +138,18 @@ def s_indist(t):
     foot(d); return im
 
 def s_ui(t):
-    """A real screenshot. It settles from a slight push-in so the frame moves
-    but comes to rest crisp, at 1:1, on the last frames."""
+    """A real screenshot, settling from a slight push-in so the frame moves but
+    comes to rest crisp at 1:1. Cropped to UI_H rows so the caption band below
+    covers nothing, and the push-in is anchored at the top so the boot-status
+    banner stays visible throughout."""
     base = Image.open(os.path.join(OUT, 'ui-panes.png')).convert('RGB')
+    shot = base.crop((0, 0, W, UI_H)); base.close()
     z = 1.05 - 0.05*ease(clamp01(t/0.75))
     if z > 1.001:
-        cw, ch = int(W/z), int(H/z)
-        im = base.crop(((W-cw)//2, (H-ch)//2, (W-cw)//2+cw, (H-ch)//2+ch)).resize((W, H), Image.LANCZOS)
-    else:
-        im = base.copy()
-    base.close()
+        cw, ch = int(W/z), int(UI_H/z)
+        shot = shot.crop(((W-cw)//2, 0, (W-cw)//2+cw, ch)).resize((W, UI_H), Image.LANCZOS)
+    im = Image.new('RGB', (W, H), BG)
+    im.paste(shot, (0, 0)); shot.close()
     d = ImageDraw.Draw(im)
     d.text((110, 84), 'Running in a browser', font=H1, fill=mix(FG, seg01(t, .05, .25)))
     d.text((110, 168), 'Real screenshot. Circuits execute in the page against real ledger state.',
@@ -218,39 +232,63 @@ def s_close(t):
            font=BODY, fill=mix(DIM, seg01(t, .46, .68)))
     foot(d); return im
 
-# ── timeline ────────────────────────────────────────────────────────────────
-TIMELINE = [
-    ('t', s_title,             4),
-    ('a', anim.dead_window,   13),
-    ('a', anim.dual_ledger,   13),
-    ('t', s_compile,           8),
-    ('t', s_tests,            10),
-    ('t', s_indist,           14),
-    ('a', anim.nullifier,     10),
-    ('t', s_ui,               11),
-    ('t', s_attacks,          13),
-    ('a', anim.soundness,     18),
-    ('t', s_trust,            10),
-    ('t', s_roadmap,          10),
-    ('t', s_close,             6),
-]
+# ── timeline ──────────────────────────────────────────────────────
+# The AUDIO drives the lengths. Every scene here re-times proportionally (the
+# animated ones index their choreography as fractions of the frame count, the
+# static ones are functions of t in [0,1]), so a scene simply lasts as long as
+# its narration needs, floored at the time the visual needs to be readable.
+# narration.py computes both and writes timing.json.
+SCENES = {
+    's_title': ('t', s_title),      'dead_window': ('a', anim.dead_window),
+    'dual_ledger': ('a', anim.dual_ledger),
+    's_compile': ('t', s_compile),  's_tests': ('t', s_tests),
+    's_indist': ('t', s_indist),    'nullifier': ('a', anim.nullifier),
+    's_ui': ('t', s_ui),            's_attacks': ('t', s_attacks),
+    'soundness': ('a', anim.soundness),
+    's_trust': ('t', s_trust),      's_roadmap': ('t', s_roadmap),
+    's_close': ('t', s_close),
+}
+TIMELINE = [(SCENES[sc['key']][0], SCENES[sc['key']][1], sc['dur']) for sc in TB['scenes']]
+
+def caption_track(total_frames):
+    """One caption string per frame. A cue stays up until the next cue starts
+    (or the scene ends) so the band never flickers between utterances."""
+    track = [None]*total_frames
+    for sc in TB['scenes']:
+        cues, scene_end = sc['cues'], sc['start'] + sc['dur']
+        for j, c in enumerate(cues):
+            a = int(round(c['start']*FPS))
+            b = int(round((cues[j+1]['start'] if j+1 < len(cues) else scene_end)*FPS))
+            for k in range(max(0, a), min(total_frames, b)):
+                track[k] = c['text']
+    return track
 
 if __name__ == '__main__':
     if os.path.isdir(FR): shutil.rmtree(FR)
     os.makedirs(FR)
+    total = sum(int(round(secs*FPS)) for _, _, secs in TIMELINE)
+    track = caption_track(total)
     idx = 0
     for kind, fn, secs in TIMELINE:
-        n = int(secs * FPS)
-        if kind == 't':
-            for k in range(n):
+        n = int(round(secs*FPS))
+        for k in range(n):
+            if kind == 't':
                 im = fn(k/(n-1) if n > 1 else 1.0)
+            else:
+                im = None                      # animated scenes render as a batch
+            if im is not None:
+                caption(ImageDraw.Draw(im), track[idx+k])
                 im.save(os.path.join(FR, f'{idx+k:06d}.png')); im.close()
-        else:
+        if kind == 'a':
             frames = fn(secs)
+            if len(frames) != n:
+                raise SystemExit(f'{fn.__name__}: anim gave {len(frames)} frames, '
+                                 f'timeline wants {n} - frame counts must agree')
             for k, im in enumerate(frames):
+                caption(ImageDraw.Draw(im), track[idx+k])
                 im.save(os.path.join(FR, f'{idx+k:06d}.png')); im.close()
-            n = len(frames)
             del frames
         idx += n
-    print(f'{len(TIMELINE)} scenes · {idx} frames · {idx/FPS:.0f}s')
-    print('every frame is generated; no frame is a duplicate of the one before it')
+    spoken = sum(len(c['text'].split()) for sc in TB['scenes'] for c in sc['cues'])
+    print(f"{len(TIMELINE)} scenes \u00b7 {idx} frames \u00b7 {idx/FPS:.1f}s")
+    print(f"narration: {spoken} words, {sum(len(sc['cues']) for sc in TB['scenes'])} caption cues")

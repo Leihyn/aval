@@ -3,7 +3,7 @@
 | Item | Link |
 |---|---|
 | GitHub repository | https://github.com/Leihyn/aval |
-| Demo video (140s, 1080p, 13 scenes) | https://github.com/Leihyn/aval/raw/main/submission/video/aval-demo.mp4 |
+| Demo video (175s, 1080p, narrated, captioned) | https://github.com/Leihyn/aval/raw/main/submission/video/aval-demo.mp4 |
 | Slide deck (12 slides, PDF) | https://github.com/Leihyn/aval/raw/main/submission/aval-deck.pdf |
 | The contract | https://github.com/Leihyn/aval/blob/main/contract/src/inflight.compact |
 | Test suite (31 tests) | https://github.com/Leihyn/aval/blob/main/contract/test/ |
