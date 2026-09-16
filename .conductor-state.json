@@ -46,7 +46,7 @@
     "demo_route": "quick-cut with on-screen captions (user-selected)"
   },
   "pipeline": {
-    "current_phase": "critique",
+    "current_phase": "url_preverify",
     "phases": {
       "intel": {
         "status": "complete",
@@ -65,9 +65,9 @@
         "completed_at": "2026-09-16T04:19:21Z"
       },
       "critique": {
-        "status": "running",
+        "status": "complete",
         "dispatched_at": "2026-09-16T04:19:34Z",
-        "completed_at": null
+        "completed_at": "2026-09-16T05:05:34Z"
       },
       "url_preverify": {
         "status": "pending"
@@ -157,6 +157,11 @@
       "plan_path": "/Users/machine/Desktop/dev/aval/PLAN.md",
       "state_path": "/Users/machine/Desktop/dev/aval/.forge-state.json",
       "env_example_path": "/Users/machine/Desktop/dev/aval/.env.example"
+    },
+    "critique": {
+      "report_path": "/Users/machine/Desktop/dev/aval/CRITIQUE-REPORT.md",
+      "second_opinion_path": "/Users/machine/Desktop/dev/aval/CRITIQUE.md",
+      "state_path": "/Users/machine/Desktop/dev/aval/.critique-state.json"
     }
   },
   "intelState": {
@@ -196,7 +201,18 @@
     "featureObservablesVerified": "13/13",
     "crossReview": "thesis-2 DISAGREE (peer sonnet) -> resolved by reconciling PRD Flow 3 with Thesis field 4; thesis untouched"
   },
-  "critiqueState": null,
+  "critiqueState": {
+    "status": "complete",
+    "competitive_assessment": "similar (peer-corrected from differentiated)",
+    "narrative_score": "compelling",
+    "integration_depth": "deep-narrow",
+    "elevations_approved": 5,
+    "elevations_applied": 5,
+    "agents_run": 2,
+    "convergent_finding": "privacy tests were vacuous: asserted absence from a hand-picked object that never had an amount field, so could not fail",
+    "fix_applied": "replaced with indistinguishability: same lock id+salt, amounts 100x apart, public state byte-identical except merkle root. 23 tests passing.",
+    "verdict": "SHIP WITH FIXES (fixes applied)"
+  },
   "buildState": null,
   "debugState": null,
   "wireState": null,
@@ -261,8 +277,8 @@
   "continuation_manifest": {
     "continuation_count": 0,
     "max_continuations": 5,
-    "last_completed_phase": "forge",
-    "next_expected_phase": "critique",
+    "last_completed_phase": "critique",
+    "next_expected_phase": "url_preverify",
     "spawned_at": "2026-09-16T03:28:27Z"
   },
   "retry_ledger": {},
