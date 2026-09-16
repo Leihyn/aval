@@ -1,0 +1,50 @@
+{
+  "manifest-version": "1",
+  "compiler-version": "0.34.0",
+  "language-version": "0.26.0",
+  "runtime-version": "0.19.0",
+  "compiler": {
+    "type": "directory",
+    "contract-info.json": {
+      "type": "file",
+      "size": 6124,
+      "hash": "70068de198372a9a090687f3d16f678e3a9c8b545805392b14c272d1ef1f862f"
+    }
+  },
+  "contract": {
+    "type": "directory",
+    "index.d.ts": {
+      "type": "file",
+      "size": 4865,
+      "hash": "d996a24f0f9120bb36adf8ff76c26cd23181653b320f7b5b0bc449e0e6cd91bd"
+    },
+    "index.js": {
+      "type": "file",
+      "size": 77366,
+      "hash": "84b57a592d0289d3151c25d45994fa449804fcdaa867ee36eae0599630363ff9"
+    },
+    "index.js.map": {
+      "type": "file",
+      "size": 3285,
+      "hash": "1ab8e765b093e73678b0a52684488de7f16adbe79920c6f77340ee2ccc0c7a03"
+    }
+  },
+  "zkir": {
+    "type": "directory",
+    "prove_funds_in_flight.zkir": {
+      "type": "file",
+      "size": 10961,
+      "hash": "aa48cbca0b3a860351a4094979a78fc641a8dca034d6fa5b50b17c245b6addc6"
+    },
+    "register_attestation.zkir": {
+      "type": "file",
+      "size": 5817,
+      "hash": "b9ea11b35bda08041a17446bde20ee2258bbb3b6b61128ab774c8a5b139b26a0"
+    },
+    "register_attestor.zkir": {
+      "type": "file",
+      "size": 3048,
+      "hash": "b830e4da75b6f7ec5ea296963e047b736be756b793568ff5c7f175ca23ddd5a4"
+    }
+  }
+}
