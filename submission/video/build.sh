@@ -10,11 +10,20 @@
 #
 # Stage 1 needs macOS `say`. Everything else is ffmpeg and Pillow.
 #
-#   bash build.sh
+# Stage 1 is skipped with --no-synth, which is what you want after
+# use_human_voice.py has already written timing.json from a real read.
+#
+#   bash build.sh              # synthetic narration
+#   bash build.sh --no-synth   # keep whatever audio/ and timing.json hold
 set -euo pipefail
 cd "$(dirname "$0")"
 
-python3 narration.py
+if [ "${1:-}" = "--no-synth" ]; then
+  [ -f timing.json ] || { echo "--no-synth needs an existing timing.json" >&2; exit 1; }
+  echo "skipping synthesis; using timing.json ($(python3 -c "import json;print(json.load(open('timing.json'))['source'])") source)"
+else
+  python3 narration.py
+fi
 python3 build_audio.py
 
 # -16 LUFS with 1.5 dB of headroom is the streaming/YouTube target. loudnorm

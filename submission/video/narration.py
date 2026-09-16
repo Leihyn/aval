@@ -93,22 +93,38 @@ def dur(path):
                           '-of', 'csv=p=0', path], capture_output=True, text=True)
     return float(out.stdout.strip())
 
-def synth():
+def flat_cues():
+    """Every cue in playback order, as (scene_index, cue_index, text)."""
+    return [(si, ci, t) for si, (_, _, cues) in enumerate(SCRIPT)
+            for ci, t in enumerate(cues)]
+
+def say_wav(i, text):
+    """Synthesise one cue with macOS `say`. Returns a repo-relative wav path."""
+    txt = os.path.join(AUD, f'{i:03d}.txt')
+    aif = os.path.join(AUD, f'{i:03d}.aiff')
+    wav = os.path.join(AUD, f'{i:03d}.wav')
+    with open(txt, 'w') as fh: fh.write(text)
+    subprocess.run(['say', '-v', VOICE, '-r', str(RATE), '-f', txt, '-o', aif], check=True)
+    subprocess.run(['ffmpeg', '-y', '-loglevel', 'error', '-i', aif,
+                    '-ar', '48000', '-ac', '1', wav], check=True)
+    return os.path.relpath(wav, HERE)
+
+def compute_timing(get_wav, source):
+    """Lay the cues out in time and return the table the renderer reads.
+
+    `get_wav(i, text)` supplies the audio for cue i however it likes: synthesised,
+    or cut from a human read. Everything downstream (scene lengths, caption
+    windows, the .srt) is derived from the MEASURED length of whatever comes
+    back, so a slower or faster read simply produces a longer or shorter film.
+    """
     os.makedirs(AUD, exist_ok=True)
     scenes, t, i = [], 0.0, 0
     for key, floor, cues in SCRIPT:
         rows, off = [], LEAD
         for c in cues:
-            txt = os.path.join(AUD, f'{i:03d}.txt')
-            aif = os.path.join(AUD, f'{i:03d}.aiff')
-            wav = os.path.join(AUD, f'{i:03d}.wav')
-            with open(txt, 'w') as fh: fh.write(c)
-            subprocess.run(['say', '-v', VOICE, '-r', str(RATE), '-f', txt, '-o', aif], check=True)
-            subprocess.run(['ffmpeg', '-y', '-loglevel', 'error', '-i', aif,
-                            '-ar', '48000', '-ac', '1', wav], check=True)
-            d = dur(wav)
-            rows.append({'text': c, 'wav': os.path.relpath(wav, HERE),
-                         'rel': off, 'len': d})
+            rel = get_wav(i, c)
+            d = dur(os.path.join(HERE, rel))
+            rows.append({'text': c, 'wav': rel, 'rel': off, 'len': d})
             off += d + GAP
             i += 1
         spoken = off - GAP + TAIL
@@ -118,20 +134,35 @@ def synth():
             r['end']   = t + r['rel'] + r['len']
         scenes.append({'key': key, 'start': t, 'dur': length, 'spoken': spoken, 'cues': rows})
         t += length
-    return {'scenes': scenes, 'total': t, 'voice': VOICE, 'rate': RATE,
-            'lead': LEAD, 'gap': GAP, 'tail': TAIL}
+    return {'scenes': scenes, 'total': t, 'source': source, 'voice': VOICE,
+            'rate': RATE, 'lead': LEAD, 'gap': GAP, 'tail': TAIL}
+
+def report(tb):
+    floors = {k: f for k, f, _ in SCRIPT}
+    print(f"{'scene':14}{'floor':>7}{'spoken':>8}{'final':>8}  cues")
+    for s in tb['scenes']:
+        print(f"{s['key']:14}{floors[s['key']]:>7.1f}{s['spoken']:>8.1f}{s['dur']:>8.1f}  {len(s['cues'])}")
+    cues = [c for s in tb['scenes'] for c in s['cues']]
+    speech = sum(c['len'] for c in cues)
+    words  = sum(len(c['text'].split()) for c in cues)
+    print(f"\nsource {tb['source']}  \u00b7  total {tb['total']:.1f}s "
+          f"({int(tb['total'])//60}m{tb['total']%60:04.1f}s)  \u00b7  {words} words  "
+          f"\u00b7  {len(cues)} cues  \u00b7  {words/(speech/60):.0f} wpm  "
+          f"\u00b7  {speech/tb['total']*100:.0f}% voiced")
+
+def synth():
+    return compute_timing(say_wav, 'tts')
 
 if __name__ == '__main__':
-    if not subprocess.run(['which', 'say'], capture_output=True).returncode == 0:
+    if '--list' in sys.argv:
+        # the script to read from, numbered to match audio/NNN.wav
+        for i, (si, ci, text) in enumerate(flat_cues()):
+            if ci == 0: print(f"\n--- {SCRIPT[si][0]} ---")
+            print(f'{i:03d}  {text}')
+        sys.exit(0)
+    if subprocess.run(['which', 'say'], capture_output=True).returncode != 0:
         sys.exit('no `say` binary; cannot synthesise narration')
     tb = synth()
     with open(os.path.join(HERE, 'timing.json'), 'w') as fh:
         json.dump(tb, fh, indent=1)
-    print(f"{'scene':14}{'floor':>7}{'spoken':>8}{'final':>8}  cues")
-    for s in tb['scenes']:
-        print(f"{s['key']:14}{dict(SCRIPT_F := {k: f for k, f, _ in SCRIPT})[s['key']]:>7.1f}"
-              f"{s['spoken']:>8.1f}{s['dur']:>8.1f}  {len(s['cues'])}")
-    words = sum(len(c['text'].split()) for s in tb['scenes'] for c in s['cues'])
-    print(f"\ntotal {tb['total']:.1f}s  ({int(tb['total'])//60}m{tb['total']%60:04.1f}s)"
-          f"  ·  {words} spoken words  ·  "
-          f"{sum(len(s['cues']) for s in tb['scenes'])} caption cues")
+    report(tb)
