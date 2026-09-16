@@ -53,17 +53,19 @@ Midnight cannot see Ethereum, so the counterparty runs the attestor. A malicious
 ## Milestone: 2nd Wave  *(required)*
 
 ```
-Make the attestor real, and reduce the trust it requires.
+Wave 2 makes the attestor real and starts reducing the trust it requires. Wave 1 deliberately shipped the primitive with a single attestor fixed at deploy, and stated the residual risk plainly rather than hiding it: a malicious attestor can fabricate a lock. Wave 2 attacks that residual directly.
 
-1. Source chain attestor with a live Ethereum listener. Watch a real escrow contract, and register leaf_hash commitments on Midnight when a lock is observed and finalized. Wave 1 attests from a script; Wave 2 attests from the chain.
+1. Source chain attestor with a live Ethereum listener. Watch a real escrow contract and register leaf_hash commitments on Midnight when a lock is observed and finalized. Wave 1 attests from a script; Wave 2 attests from the chain. Done when a lock created on Sepolia produces a Midnight attestation with no human in the loop, and reorg handling is tested against a forced reorg rather than assumed.
 
-2. k of n attestor quorum. Replace the single attestor fixed at deploy with a threshold set, so no one operator can fabricate a lock alone. This is the first real reduction of the residual risk stated in Wave 1.
+2. k of n attestor quorum. Replace the single attestor with a threshold set, so no one operator can fabricate a lock alone. Done when the contract rejects a leaf carrying fewer than k signatures, proved by a test that submits k-1 and expects a revert.
 
-3. Encrypted preimage channel. Deliver the lock preimage to the holder without the attestor publishing it, so the holder can prove without an out of band handoff.
+3. Encrypted preimage channel. Deliver the lock preimage to the holder without the attestor publishing it, so proving needs no out of band handoff. Done when the holder can prove from chain data plus their own key alone.
 
-4. Preprod deployment. Wave 1 compiles against ledger 8 and commits both builds, but deployment was gated on a container runtime and a faucet CAPTCHA. Wave 2 clears both and puts a live contract address in the README.
+4. Preprod deployment. Wave 1 compiles against ledger 8, which is what Preprod runs, and commits both builds, but deployment itself was gated on a proof server needing a container runtime and on a faucet CAPTCHA. Wave 2 clears both and puts a live contract address and a transaction hash in the README.
 
-5. The identity precondition predicate on the same primitive: prove kyc_passed AND jurisdiction NOT IN sanctioned, without revealing the identity. Same Merkle membership, same nullifier, different leaf.
+5. The identity precondition predicate on the same primitive: prove kyc_passed AND jurisdiction NOT IN sanctioned without revealing the identity. Same Merkle membership, same nullifier, same expiry, different leaf. This is the first evidence that Aval is infrastructure rather than one feature.
+
+Every item above is testable, and each will ship with the test that proves it, in the same style as Wave 1 where both security bugs became regression tests that are the attack rather than descriptions of it.
 ```
 
 ---
@@ -71,15 +73,17 @@ Make the attestor real, and reduce the trust it requires.
 ## Milestone: 3rd Wave  *(required)*
 
 ```
-Harden the trust model and widen the predicate set.
+Wave 3 hardens the trust model and widens the predicate set, then puts the result in front of a real user.
 
-1. Bonded and slashable attestors. An attestor posts a bond; a fraud proof against a fabricated lock slashes it. This moves the residual from "trust the quorum" to "the quorum loses money if it lies".
+1. Bonded and slashable attestors. An attestor posts a bond, and a fraud proof against a fabricated lock slashes it. This moves the residual from "trust the quorum" to "the quorum loses money if it lies", which is the first point at which the trust assumption becomes economic rather than social. Done when a submitted fraud proof burns a bond in a test.
 
-2. Source chain light client path. The end state stated honestly in Wave 1: verify Ethereum finality on Midnight rather than trusting an attestor at all. Scoped as a design and a prototype, since a full light client is beyond one Wave.
+2. Source chain light client path. The end state named honestly in Wave 1: verify Ethereum finality on Midnight rather than trusting an attestor at all. Scoped as a design document and a prototype of the header verification circuit, because a full light client is more than one Wave of work and claiming otherwise would be the kind of overclaim this project has avoided throughout.
 
-3. Two more predicates on the same primitive: private solvency (reserves >= liabilities) and invoice factoring (invoice_valid AND unpaid AND amount >= advance). Each reuses the leaf, the nullifier and the expiry, and only the predicate changes, which is the argument that this is infrastructure rather than one feature.
+3. Two further predicates on the same primitive: private solvency (reserves >= liabilities) and invoice factoring (invoice_valid AND unpaid AND amount >= advance). Each reuses the leaf, the nullifier and the expiry, and only the predicate changes. Three predicates on one primitive is the argument that this is infrastructure.
 
-4. Counterparty SDK. A TypeScript package so an integrator adds proof of funds in flight to their own settlement flow without writing Compact.
+4. Counterparty SDK. A TypeScript package so an integrator adds proof of funds in flight to their own settlement flow without writing Compact. Done when a sample integration verifies a proof in under twenty lines.
 
-5. Adoption path. Target users are cross chain market makers, OTC desks and bridge operators who already accept fast finality trust but cannot accept publishing position sizes. Wave 3 puts the primitive in front of one of them and reports what broke.
+5. Adoption path. The target users are cross chain market makers, OTC desks and bridge operators who already accept fast finality trust today but cannot accept publishing position sizes, because that is their book. Wave 3 puts the primitive in front of one of them, runs their real flow, and reports what broke rather than what worked.
+
+The through line across all three Waves is the same: every claim is checkable, every limitation is stated before a judge has to find it, and progress is measured by what can be run rather than what can be asserted.
 ```
