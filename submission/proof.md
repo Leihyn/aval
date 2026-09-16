@@ -31,7 +31,7 @@ Two circuits, four proving and verifier keys. Full source in `captures/compile.t
 
 ```
 $ npm test
-      Tests  25 passed (25)
+      Tests  31 passed (31)
    Start at  09:38:42
    Duration  1.39s (transform 276ms, setup 0ms, collect 561ms, tests 949ms, environment 0ms, prepare 246ms)
 ```

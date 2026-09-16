@@ -548,7 +548,7 @@ export default function App() {
       <footer className="mt-8 flex flex-wrap items-center gap-x-4 gap-y-1 border-t border-base-800 pt-5 text-body text-ink-500">
         <span>Apache-2.0</span>
         <span aria-hidden>·</span>
-        <span className="text-ink-300">3 circuits, 24 passing tests</span>
+        <span className="text-ink-300">3 circuits, 31 passing tests</span>
         <span aria-hidden>·</span>
         <a className="text-ledger-400 hover:underline" href="https://github.com/Leihyn/aval">github.com/Leihyn/aval</a>
       </footer>

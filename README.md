@@ -8,7 +8,7 @@ Built on [Midnight](https://midnight.network) for the Midnight Buildathon, Wave 
 
 ```bash
 cd contract && npm install && npm test
-# → Tests  25 passed (25)
+# → Tests  31 passed (31)
 ```
 
 No Docker. No proof server. No wallet. No RPC endpoint. No API keys. Clone and run.
@@ -162,7 +162,7 @@ Everything below was produced by running the code, not by describing it.
 |---|---|---|
 | Contract compiles (the Technical Gate) | `compact compile src/inflight.compact out` | 3 `.zkir` circuits |
 | Proving keys generate | `compact compile src/inflight.compact out-full` | 4 keys, 14.5s |
-| Test suite | `npm test` | **25/25 passed**, 651ms |
+| Test suite | `npm test` | **31/31 passed**, 651ms |
 | Seed script | `npx tsx scripts/seed-demo.ts` | 3 attestations, 1 fill, amount absent |
 | Frontend build | `cd frontend && npm run build` | 1.4MB wasm + 310KB js, exit 0 |
 

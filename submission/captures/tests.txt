@@ -33,7 +33,13 @@ stdout | test/soundness.test.ts > soundness: the merkle path must open the leaf 
  ✓ test/inflight.test.ts > privacy, indistinguishability of the amount > never writes the decimal amount into any public field
  ✓ test/inflight.test.ts > privacy, indistinguishability of the amount > never exposes the private lock id or salt in public state
  ✓ test/inflight.test.ts > privacy, indistinguishability of the amount > publishes a nullifier that is not the registered leaf
- Test Files  3 passed (3)
-      Tests  25 passed (25)
-   Start at  09:38:42
-   Duration  1.39s (transform 276ms, setup 0ms, collect 561ms, tests 949ms, environment 0ms, prepare 246ms)
+ ✓ test/stress.test.ts > stress: boundary values > handles amount = 0 against required = 0
+ ✓ test/stress.test.ts > stress: boundary values > rejects amount = 0 against required = 1
+ ✓ test/stress.test.ts > stress: boundary values > handles the maximum Uint<64> amount
+ ✓ test/stress.test.ts > stress: boundary values > rejects at the exact expiry boundary, accepts one tick before
+ ✓ test/stress.test.ts > stress: state integrity under load > keeps nullifiers distinct across 50 independent locks 1140ms
+ ✓ test/stress.test.ts > stress: state integrity under load > a rejected proof leaves no trace in public state
+ Test Files  4 passed (4)
+      Tests  31 passed (31)
+   Start at  10:04:47
+   Duration  2.32s (transform 478ms, setup 0ms, collect 894ms, tests 2.48s, environment 1ms, prepare 570ms)

@@ -105,7 +105,7 @@ binding in the leaf rather than by the nullifier.
 | Judging criterion | Weight | How Aval scores |
 |---|---:|---|
 | Engineering & Implementation | 40% | Three compiling circuits with genuine private-state management. Six explicit `disclose()` boundaries, each annotated with what an observer actually learns. Nullifier-based double-spend prevention. Real on-chain expiry via `kernel.blockTimeLessThan`, not a caller-supplied timestamp. |
-| Quality Assurance & Reliability | 15% | 24 passing simulator tests. Runs from a clean clone with no Docker and no proof server. A dedicated privacy group asserts public state mechanically, including an indistinguishability test: the same lock at two amounts 100x apart produces byte-identical public state except the root hash. |
+| Quality Assurance & Reliability | 15% | 31 passing simulator tests. Runs from a clean clone with no Docker and no proof server. A dedicated privacy group asserts public state mechanically, including an indistinguishability test: the same lock at two amounts 100x apart produces byte-identical public state except the root hash. |
 | Product & Vision | 15% | One vertical shipped, three roadmapped. Directly matches Midnight's own stated 2026 priorities: "institutional execution" and "programmable compliance". |
 | User Experience & Design | 15% | A two-pane demo: what the counterparty sees versus what the chain sees, side by side. The privacy claim is legible, not asserted. |
 | Communication | 10% | Demo video leads with the 40-minute dead-capital window, then collapses it to zero on screen. |

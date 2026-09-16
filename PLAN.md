@@ -159,9 +159,9 @@ Copy `contract/test/inflight.test.ts` from **ARCHITECTURE.md Section 6**.
 npx vitest run
 ```
 
-Expected: `Tests  25 passed (25)`
+Expected: `Tests  31 passed (31)`
 
-Commit: `test: 24 passing simulator tests covering access control, nullifiers, binding, expiry, privacy`
+Commit: `test: 31 passing simulator tests covering access control, nullifiers, binding, expiry, privacy`
 
 ### Phase 2 gate
 

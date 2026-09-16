@@ -148,12 +148,12 @@ footer(d); add(img, 10)
 
 # 6 tests (REAL)
 img, d = new_frame()
-d.text((80, 70), '25 tests, all passing', font=F_H1, fill=FG)
+d.text((80, 70), '31 tests, all passing', font=F_H1, fill=FG)
 d.text((80, 150), 'No Docker. No proof server. No wallet. Clone and run.', font=F_SMALL, fill=DIM)
 lines = read_capture('tests.txt')
 term_panel(d, 80, 205, 1760, 700, lines[:24], 'real output', GREEN,
            highlight={'22 passed': GREEN, '✓': GREEN})
-d.text((80, 940), 'Tests  25 passed (25)', font=f(MONO, 34), fill=GREEN)
+d.text((80, 940), 'Tests  31 passed (31)', font=f(MONO, 34), fill=GREEN)
 footer(d); add(img, 13)
 
 # 7 seed / privacy (REAL)
@@ -257,7 +257,7 @@ img, d = new_frame()
 d.text((80, 340), 'Aval', font=F_TITLE, fill=FG)
 wrap(d, 'Act on a fact before that fact is public.', F_H1, 80, 470, 1700, GREEN)
 d.text((80, 640), 'github.com/Leihyn/aval', font=f(MONO, 36), fill=SKY)
-d.text((80, 700), 'Apache-2.0  ·  25 passing tests  ·  2 circuits  ·  no Docker required', font=F_BODY, fill=DIM)
+d.text((80, 700), 'Apache-2.0  ·  31 passing tests  ·  2 circuits  ·  no Docker required', font=F_BODY, fill=DIM)
 footer(d); add(img, 6)
 
 # ── write frames ──────────────────────────────────────────────────────────────
