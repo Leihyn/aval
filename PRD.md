@@ -1,0 +1,469 @@
+# Aval — Product Requirements Document
+
+**Project:** Aval
+**Hackathon:** The Midnight Buildathon (AKINDO WaveHack), Wave 1
+**Track:** Single track
+**Deadline:** 2026-09-16 15:00:00 UTC
+**Builder:** Onatola Timilehin Faruq (GitHub: Leihyn)
+**Scope mode:** `rush` (under 1 build day remaining at forge time)
+
+---
+
+## Section 1: Project Overview
+
+### One line
+
+Aval proves money is committed but not yet arrived, so a counterparty can act now instead of waiting for settlement.
+
+### The problem
+
+A treasury desk moves $2M from Ethereum to a counterparty. The funds leave the source chain immediately. They arrive somewhere between eight minutes and seven days later, depending on the bridge. During that window the money exists, it is irrevocably committed, and it is useless. The counterparty will not release their side against a screenshot, so both parties wait.
+
+That waiting window is not a technical curiosity. It is the single largest source of idle working capital in cross-chain finance, and it exists for one reason: **there is a gap between a fact being true and that fact being publicly verifiable.**
+
+The same gap appears everywhere in finance:
+
+- Bridged funds are in transit but not yet credited.
+- KYC passed, but the documents are private and cannot be shown.
+- An invoice is signed and valid, but unsettled.
+- A balance is sufficient, but revealing it hands a counterparty your negotiating position.
+
+In every case the counterparty either waits, or demands you reveal something you should not have to reveal.
+
+### The solution
+
+Aval is a settlement-assurance layer on Midnight. A party proves, in zero knowledge, that a committed-but-unsettled fact satisfies a predicate the counterparty cares about, without revealing the underlying fact to anyone.
+
+Wave 1 ships one vertical end to end: **proof of funds in flight.** Alice locks funds in an escrow on a source chain. She proves to Bob's Midnight contract that the locked amount clears his threshold and is earmarked for him specifically, without revealing how much she locked, which lock it was, or who she is. Bob's contract verifies and releases his leg immediately.
+
+The public ledger records a Merkle root, a nullifier, and a fill count. It never records an amount.
+
+### Why this wins
+
+| Judging criterion | Weight | How Aval scores |
+|---|---:|---|
+| Engineering & Implementation | 40% | Three compiling circuits with genuine private-state management. Six explicit `disclose()` boundaries, each annotated with what an observer actually learns. Nullifier-based double-spend prevention. Real on-chain expiry via `kernel.blockTimeLessThan`, not a caller-supplied timestamp. |
+| Quality Assurance & Reliability | 15% | 22 passing simulator tests. Runs from a clean clone with no Docker and no proof server. Four of the tests mechanically assert the privacy property rather than describing it. |
+| Product & Vision | 15% | One vertical shipped, three roadmapped. Directly matches Midnight's own stated 2026 priorities: "institutional execution" and "programmable compliance". |
+| User Experience & Design | 15% | A two-pane demo: what the counterparty sees versus what the chain sees, side by side. The privacy claim is legible, not asserted. |
+| Communication | 10% | Demo video leads with the 40-minute dead-capital window, then collapses it to zero on screen. |
+| Business Development & Viability | 5% | Named buyer (cross-chain treasury desks, OTC, bridge-integrated lenders), named adoption path via the bilateral deployment that requires zero added trust. |
+
+### Competitive position
+
+Across all 59 Wave 1 submissions, **zero** address in-flight or pending settlement state. The field concentrates in credit and solvency proofs (15 entries) and identity disclosure (8 entries). Aval is the only entry in its category.
+
+### Thesis
+
+1. **WINNING ARGUMENT** — The gap between "true" and "publicly verifiable" is where working capital dies, and Midnight's dual ledger is the only place you can close it without revealing the fact.
+2. **EVIDENCE** — 0 of 59 competitors touch in-flight state. Midnight's own 2026 messaging names "institutional execution" and "programmable compliance" as priorities.
+3. **DEMO OBLIGATION** — The judge must WITNESS that the counterparty learns "threshold cleared" while the chain learns nothing about the amount. Not be told it. See it, in two panes, with the amount absent from the ledger dump.
+4. **HERO FLOW** — Attestor registers a lock commitment, Alice proves the threshold in ZK, Bob's contract releases, the ledger shows a nullifier and no amount.
+5. **INVARIANTS** — No fabricated state in the demo. Every number on screen is produced by a real circuit execution against a real ledger. The trust assumption is stated, never hidden.
+6. **DRIFT TRIPWIRES** — If the headline becomes "a privacy bridge", "a ZK credit score", or "an identity wallet", the thesis has drifted. Aval is settlement assurance, not any of those.
+
+---
+
+## Section 2: System Architecture Overview
+
+```
+  SOURCE CHAIN (Ethereum)            OFF-CHAIN                 MIDNIGHT (Compact)
+ ┌───────────────────────┐     ┌──────────────────┐     ┌────────────────────────────┐
+ │ Escrow contract       │     │ Attestor watcher │     │ Aval contract              │
+ │                       │     │                  │     │                            │
+ │ Locked(lockId,        │────▶│ observes lock    │────▶│ register_attestation(leaf) │
+ │        amount,        │     │ computes leaf =  │     │   → HistoricMerkleTree     │
+ │        beneficiary,   │     │   leaf_hash(...) │     │                            │
+ │        expiry)        │     │                  │     │  PUBLIC LEDGER:            │
+ └───────────────────────┘     │ sends preimage   │     │   attestations (root)      │
+                               │ to Alice offline │     │   spent (nullifiers)       │
+                               └────────┬─────────┘     │   attestor, fills          │
+                                        │               │                            │
+                               ┌────────▼─────────┐     │  PRIVATE (witness only):   │
+                               │ Alice's client   │────▶│   lock_id, amount, salt,   │
+                               │ holds preimage   │     │   merkle path              │
+                               │ builds witness   │     │                            │
+                               └──────────────────┘     │ prove_funds_in_flight(     │
+                                                        │   required, counterparty,  │
+                               ┌──────────────────┐     │   expiry)                  │
+                               │ Bob's contract   │◀────│   → asserts, nullifies     │
+                               │ releases his leg │     └────────────────────────────┘
+                               └──────────────────┘
+```
+
+### Component table
+
+| Name | Type | Purpose | Key dependencies |
+|---|---|---|---|
+| `inflight.compact` | Compact contract | The three circuits: attestor bootstrap, attestation registry, in-flight proof | CompactStandardLibrary, compiler 0.34.0 |
+| `AvalSimulator` | TypeScript test harness | Runs circuits in-process against real ledger state, injects block time | `@midnight-ntwrk/compact-runtime` 0.19.0 |
+| Attestor watcher | TypeScript module | Observes source-chain lock events, computes leaf via `pureCircuits.leaf_hash`, registers it | Compiled contract's `pureCircuits` |
+| Alice client | TypeScript module | Holds the lock preimage, builds the witness, requests the proof | Compiled contract, simulator |
+| Demo frontend | React 19 + Vite + Tailwind v4 | Two-pane view: counterparty knowledge vs public ledger knowledge | Compiled contract, Vite |
+
+### Data flow
+
+1. Escrow emits `Locked(lockId, amount, beneficiary, expiry)` on the source chain.
+2. The attestor computes `leaf = leaf_hash(lockId, amount, counterparty, expiry, salt)` using the compiler-generated pure circuit, so the off-chain hash is bit-identical to the in-circuit hash.
+3. The attestor calls `register_attestation(leaf)` on Midnight. Only the hash goes on-chain.
+4. The attestor sends the preimage `(lockId, amount, salt)` to Alice over an off-chain channel.
+5. Alice calls `prove_funds_in_flight(required, counterparty, expiry)`. Her client supplies `lockId`, `amount`, `salt` and the Merkle path as private witnesses.
+6. The circuit recomputes the leaf, proves membership against a historic root, checks the threshold and the expiry, derives and spends a nullifier.
+7. Bob's contract reads `fills` and the nullifier set and releases his leg.
+
+### State management
+
+| State | Location | Visibility |
+|---|---|---|
+| `attestations` (Merkle root + history) | Midnight ledger | Public |
+| `spent` (nullifier set) | Midnight ledger | Public |
+| `attestor`, `attestor_registered` | Midnight ledger | Public |
+| `fills` (counter) | Midnight ledger | Public |
+| `lock_id`, `amount`, `salt` | Caller's private state | Never on-chain |
+| Merkle path | Derived locally from public tree, supplied privately | Never on-chain |
+
+---
+
+## Section 3: User Flows
+
+### Flow 1 — Attestor bootstrap (happy path)
+
+1. Counterparty (Bob) deploys the Aval contract.
+2. Bob runs `register_attestor()`. His secret key stays in witness state; only a domain-separated derived id is published.
+3. Ledger now shows `attestor_registered = true`.
+
+**Error case:** calling `register_attestor()` twice reverts with "attestor already registered".
+
+### Flow 2 — Attestation registration (happy path)
+
+1. Bob's watcher observes `Locked(...)` on the source chain.
+2. Watcher computes the leaf and calls `register_attestation(leaf)`.
+3. Leaf is inserted into the historic Merkle tree.
+
+**Error case:** a non-attestor calling `register_attestation` reverts with "caller is not the attestor".
+
+### Flow 3 — Proof of funds in flight (THE HERO FLOW)
+
+1. Alice receives the preimage from the watcher off-chain.
+2. Alice's client builds the witness: `lock_id`, `amount`, `salt`, and the Merkle path found via `findPathForLeaf`.
+3. Alice calls `prove_funds_in_flight(required, counterparty, expiry)`.
+4. Circuit recomputes the leaf, discloses only the computed root, asserts membership.
+5. Circuit asserts `blockTimeLessThan(expiry)`.
+6. Circuit discloses only the boolean `amount >= required`.
+7. Circuit derives the nullifier, asserts unspent, inserts it, increments `fills`.
+8. Bob's contract observes the fill and releases his leg.
+
+**Error cases:**
+- Amount below threshold → "locked amount below required threshold"
+- Lock never registered → no Merkle path exists, proof cannot be constructed
+- Same lock reused → "this lock has already backed a proof"
+- Past expiry → "attestation expired"
+- Attestation issued for a different counterparty → leaf mismatch, no path
+- Prover inflates the amount → leaf mismatch, no path
+- Prover extends their own expiry → leaf mismatch, no path
+
+### Flow 4 — Judge verification (demo flow)
+
+1. Judge clones the repo, runs `npm install && npm test` in `contract/`.
+2. 22 tests pass in roughly one second. No Docker, no proof server, no wallet.
+3. Judge opens the demo frontend and steps through the hero flow.
+4. Judge reads the public-ledger pane and confirms the amount is absent.
+
+---
+
+## Section 4: Technical Specifications
+
+### 4.1 `inflight.compact`
+
+**Purpose:** the full protocol, three circuits.
+
+**Interface contract:**
+
+```compact
+export circuit register_attestor(): [];
+export circuit register_attestation(leaf: Bytes<32>): [];
+export circuit prove_funds_in_flight(required: Uint<64>, counterparty: Bytes<32>, expiry: Uint<64>): [];
+
+export pure circuit derive_id(sk: Bytes<32>): Bytes<32>;
+export pure circuit leaf_hash(lock_id: Bytes<32>, amount: Uint<64>, counterparty: Bytes<32>, expiry: Uint<64>, salt: Bytes<32>): Bytes<32>;
+export pure circuit nullifier_of(lock_id: Bytes<32>, salt: Bytes<32>): Bytes<32>;
+```
+
+**Ledger declarations:**
+
+```compact
+export ledger attestations: HistoricMerkleTree<10, Bytes<32>>;
+export ledger spent: Set<Bytes<32>>;
+export ledger attestor: Bytes<32>;
+export ledger attestor_registered: Boolean;
+export ledger fills: Counter;
+```
+
+**Witness declarations:**
+
+```compact
+witness local_secret_key(): Bytes<32>;
+witness get_lock_id(): Bytes<32>;
+witness get_amount(): Uint<64>;
+witness get_salt(): Bytes<32>;
+witness find_path(leaf: Bytes<32>): MerkleTreePath<10, Bytes<32>>;
+```
+
+**Capacity:** tree depth 10 = 1,024 concurrent registered attestations. Sufficient for Wave 1; depth is a one-line change.
+
+**Dependencies:** CompactStandardLibrary only.
+
+### 4.2 `AvalSimulator`
+
+**Purpose:** run circuits in-process with injectable block time.
+
+**Interface contract:**
+
+```ts
+static create(secretKey: Uint8Array): Promise<AvalSimulator>
+registerAttestor(secretKey, time?): Promise<void>
+registerAttestation(secretKey, leaf, time?): Promise<void>
+proveFundsInFlight({ secretKey, lock, required, counterparty, expiry, time? }): Promise<void>
+get public(): Ledger    // read-only public ledger view
+```
+
+**Key data structures:**
+
+```ts
+type LockRecord = { lockId: Uint8Array; amount: bigint; salt: Uint8Array };
+type AvalPrivateState = { secretKey: Uint8Array; lock: LockRecord | null };
+```
+
+**Dependencies:** `@midnight-ntwrk/compact-runtime` 0.19.0, compiled contract output.
+
+### 4.3 Attestor watcher
+
+**Purpose:** bridge source-chain events to Midnight attestations.
+
+**Interface contract:** `onLocked(event) -> registerAttestation(leaf) + sendPreimageToBeneficiary(...)`.
+
+**Critical property:** it computes the leaf using `pureCircuits.leaf_hash` exported by the compiler, never a reimplementation. There is exactly one hash definition in the system.
+
+### 4.4 Alice client
+
+**Purpose:** hold the lock preimage and construct the private witness for the proof.
+
+**Interface contract:**
+
+```ts
+buildWitness(lock: LockRecord): AvalPrivateState
+requestProof(required: bigint, counterparty: Uint8Array, expiry: bigint): Promise<void>
+```
+
+**Key data structures:** reuses `LockRecord` and `AvalPrivateState` from 4.2 — there is one definition of each in the system.
+
+**Responsibilities:** receive the preimage off-chain, locate the Merkle path with `findPathForLeaf` against the public tree, supply `lock_id`/`amount`/`salt`/path as witnesses. It never transmits the amount anywhere.
+
+**Dependencies:** compiled contract output, simulator context.
+
+**Performance:** path lookup is O(tree depth) = 10 hashes. Negligible.
+
+### 4.5 Demo frontend
+
+**Purpose:** make the privacy claim legible.
+
+**Interface contract:** two panes rendered from the same simulator instance. Left pane = what the counterparty knows. Right pane = a literal dump of public ledger state.
+
+---
+
+## Section 5: API Contracts
+
+Aval calls no external HTTP APIs in Wave 1. The source-chain leg is represented by a scripted escrow event in the demo, because a live Ethereum listener is out of Wave 1 scope and would add a dependency the judge cannot run offline.
+
+| Interface | Direction | Shape | Notes |
+|---|---|---|---|
+| `Locked` event (source chain) | inbound | `{ lockId: bytes32, amount: uint256, beneficiary: address, expiry: uint64 }` | Simulated in Wave 1. Real listener is Wave 2. |
+| Attestor → Alice preimage channel | off-chain | `{ lockId, amount, salt }` | Out of band. Encryption is Wave 2. |
+| Midnight contract calls | on-chain | see Section 4.1 | Via compact-runtime |
+
+**Authentication:** attestor writes are gated by a derived-id equality check inside the circuit. There are no API keys in Wave 1.
+
+**Rate limits:** none applicable.
+
+**Error handling:** every circuit assertion produces a named revert string, enumerated in Flow 3.
+
+---
+
+## Section 6: Demo Script
+
+**Target length: 3 minutes.** No published maximum in the rules; Communication is 10% and prior Midnight winners were all cited for presentation clarity.
+
+### Scene 1 — The dead window (0:00–0:30)
+
+**On screen:** a timeline. $2M leaves Ethereum at 09:00. It lands at 09:41. Between those two marks, a red bar labelled "capital that exists and cannot be used".
+
+**Voiceover:** "At nine o'clock this money left Ethereum. It arrives at nine forty-one. For forty-one minutes it exists, it is irrevocably committed, and it is useless. The counterparty will not release their side against a screenshot. So everybody waits. This window is where cross-chain working capital goes to die."
+
+### Scene 2 — Why you cannot just show them (0:30–0:55)
+
+**On screen:** two bad options side by side. Left: "Wait 41 minutes." Right: "Reveal your balance, your counterparties, your position size."
+
+**Voiceover:** "You have two options today. Wait, or open your book. Revealing the amount tells your counterparty exactly how much room you have. That is not a privacy nicety, it is your negotiating position."
+
+### Scene 3 — The attestation (0:55–1:25)
+
+**On screen:** the watcher observes a lock, computes a leaf, registers it. The ledger pane shows a single hash appearing.
+
+**Voiceover:** "Bob's own watcher sees the lock on Ethereum. Note who that is: Bob. His contract cannot see Ethereum, but he can. So he registers a commitment to what he saw. One hash. No amount."
+
+### Scene 4 — The proof (1:25–2:10) — THE MONEY SHOT
+
+**On screen:** split pane. Left, Bob's view: "threshold $1.5M cleared — release authorized". Right, the public ledger: a Merkle root, a nullifier, `fills: 1`. The word "amount" appears nowhere.
+
+**Voiceover:** "Alice proves the locked amount clears Bob's threshold. Watch the right pane. That is everything the chain now knows. A root, a nullifier, a counter. The amount is not there, and it never will be. Bob releases immediately. Forty-one minutes becomes zero."
+
+**[Do: run the live prove call, then scroll the ledger dump so the judge sees the absence.]**
+
+### Scene 5 — Try to cheat it (2:10–2:40)
+
+**On screen:** four failing attempts scroll past, each with its revert string: reuse the same lock, inflate the amount, swap the counterparty, extend the expiry.
+
+**Voiceover:** "Reuse the lock: rejected by the nullifier. Inflate the amount: the leaf no longer matches. Point it at a different counterparty: same. Extend your own expiry: same. Twenty-two tests, all passing, and four of them assert the amount is absent from public state rather than just claiming it."
+
+### Scene 6 — Where this goes (2:40–3:00)
+
+**On screen:** the same primitive with three more predicates: identity, solvency, invoice factoring.
+
+**Voiceover:** "Funds in flight is one predicate. The primitive is the same for proving KYC passed, proving reserves cover the book, proving an invoice is real. Aval is the layer that lets a counterparty act on a fact before that fact is public. Built on Midnight, because the dual ledger is the only place this is possible."
+
+### Voice and copy compliance
+
+Checked: no em dashes in voiceover, no corporate buzzwords ("leverage", "synergy", "paradigm"), active voice throughout. YouTube title: "Aval: prove money is in flight without revealing the amount" (63 characters, no special characters).
+
+---
+
+## Section 7: Risk Register
+
+| # | Risk | Category | Severity | Likelihood | Impact | Mitigation | Decision tree |
+|---|---|---|---|---|---|---|---|
+| R1 | Compact contract fails to compile at submission time | Technical | CRITICAL | Low | Auto-DQ | Already compiles; CI-style recompile before packaging | DT-1 |
+| R2 | `midnightntwrk` GitHub topic label forgotten | Judging | CRITICAL | Medium | Auto-DQ | Explicit checklist item; verified in preflight | DT-2 |
+| R3 | Deadline missed | Time | CRITICAL | Medium | Total loss | Safety line at T-2h packages whatever exists | DT-3 |
+| R4 | Demo video or deck missing | Judging | CRITICAL | Medium | Auto-DQ | Quick-cut route if Remotion overruns | DT-4 |
+| R5 | Judge cannot run the tests (Docker assumed) | Demo | HIGH | Medium | Loses 15% QA | Simulator needs no Docker; README states prerequisites explicitly | DT-5 |
+| R6 | Attestor trust assumption read as a flaw | Judging | HIGH | Medium | Loses Product score | State it plainly with the trust ladder; bilateral case needs zero added trust | DT-6 |
+| R7 | Scope read as over-claiming ("a platform") | Scope | HIGH | Medium | Loses Product 15% | Ship one vertical, roadmap the rest explicitly | DT-7 |
+| R8 | Frontend unfinished, no UX evidence | Demo | MEDIUM | Medium | Loses part of 15% UX | Two-pane demo is the minimum viable UI; contract+tests stand alone if cut | DT-8 |
+| R9 | Reviewer confuses Aval with the 15 credit-proof entries | Competitive | MEDIUM | Medium | Diluted scoring | Lead every artifact with "in flight", never "creditworthiness" | DT-9 |
+| R10 | Tree depth 10 read as a toy limit | Technical | LOW | Low | Minor | Document that depth is a one-line change and why 1,024 is right for Wave 1 | DT-10 |
+| R11 | Toolchain 0.34 targets ledger 9, not on testnet | Technical | MEDIUM | High | Blocks deploy only | Deploy is not required by the rules; compile-only is the gate | DT-11 |
+| R13 | Off-chain preimage channel unavailable, so Alice never receives the lock data | Technical | MEDIUM | Low | Alice simply cannot prove; no funds at risk, fails closed. Encryption and retry are Wave 2. | DT-12 |
+| R12 | Point-proportional payout makes effort feel unrewarded | Judging | LOW | High | Morale, not score | Real prize is Build Club selection and Wave 2/3 compounding | — |
+
+All CRITICAL and HIGH risks (R1-R9, R11) have decision trees in PLAN.md. 13 risks across all 6 categories: Technical (R1, R10, R11, R13), Judging (R2, R4, R6, R9, R12), Time (R3), Demo (R5, R8), Competitive (R9), Scope (R7).
+
+---
+
+## Section 7.5: Judge Experience
+
+### First-visit state
+
+The judge opens the repo, not a URL, first. So the README is the landing page. It must show, above the fold: what Aval proves, the one command that runs the tests, and the passing count.
+
+Demo frontend first-visit state: the two-pane view pre-seeded with a registered attestation, so there is never an empty state. **The seed uses a real circuit execution, not fabricated JSON** — the invariant in Thesis field 5 forbids fabricated state, because the product's entire claim is verifiability.
+
+### Seed script requirements
+
+`contract/scripts/seed-demo.ts`: creates the attestor, registers three attestations with realistic amounts, executes one successful proof. All through the real simulator. Output is the actual resulting ledger state.
+
+### The three tests
+
+- **10 seconds:** the README headline and the passing test count answer "what is this and does it work".
+- **30 seconds:** the two-pane screenshot shows the counterparty knowing "cleared" while the ledger shows no amount.
+- **60 seconds:** `cd contract && npm install && npm test` returns 22 passing.
+
+### Landing page content
+
+No empty states, no wallet connection required, no login. The demo runs entirely in-process.
+
+---
+
+## Section 7.6: Judge Proof Artifacts
+
+### Proof route
+
+A `## Verification` section in the README plus `submission/proof.md`.
+
+### Required artifacts
+
+| Artifact | What it proves | Generated by |
+|---|---|---|
+| `compact compile` output listing 3 circuits and 6 keys | The technical gate is cleared | Build phase |
+| `npm test` output, 22 passing | QA criterion | Build phase |
+| Ledger dump after a successful proof | The amount is genuinely absent | Seed script |
+| The four rejection cases with their revert strings | The security properties hold | Test suite |
+| Compiler and language versions | Reproducibility | `compact compile --version` |
+
+### No explorer links
+
+Wave 1 does not deploy to testnet (toolchain 0.34 targets ledger 9, which is not on testnet, and deploy is not a gate requirement). This is stated plainly rather than papered over.
+
+---
+
+## Section 8: Day-by-Day Build Plan
+
+Under one build day remains. Hours are from forge completion, against the 15:00 UTC deadline.
+
+| Block | Objective | Deliverable |
+|---|---|---|
+| H+0 to H+1 | Architecture and plan documents | ARCHITECTURE.md, PLAN.md |
+| H+1 to H+2 | Critique pass and fixes | critique report actioned |
+| H+2 to H+4 | Frontend two-pane demo, wired to the simulator | Running UI |
+| H+4 to H+5 | Verify, stress, design pass | Reports |
+| H+5 to H+6 | README, deck, seed script | Submission docs |
+| H+6 to H+7 | Demo video | Video file |
+| H+7 to H+8 | Deploy frontend, livetest, package | Live URL, submission bundle |
+| H+8 onward | Buffer, preflight, submit | Submitted |
+
+**Safety line:** at 13:00 UTC, package whatever exists. Any phase that has not run is reported as not-run.
+
+---
+
+## Section 9: Dependencies & Prerequisites
+
+| Dependency | Version | Purpose | Status |
+|---|---|---|---|
+| `compact` devtool | 0.5.2 | Toolchain manager | Installed at `~/.local/bin/compact` |
+| Compact compiler | 0.34.0 | Compiles circuits | Installed |
+| Compact language | 0.26.0 | Language version | Bundled |
+| `@midnight-ntwrk/compact-runtime` | 0.19.0 | Executes circuits in JS | Installed, matches compiler target |
+| Node.js | 25.6.1 | Runtime | Present |
+| vitest | ^2 | Test runner | Installed |
+| React 19 + Vite + Tailwind v4 | latest | Demo frontend | To install |
+
+### Explicitly NOT required
+
+Docker, the Midnight proof server, the Lace wallet, a testnet faucet, and any RPC endpoint. This is a deliberate design decision so a judge can verify everything offline in under a minute. It is also a direct answer to the loudest complaint in Midnight's own docs issues, where prerequisites like Docker are used but never named.
+
+### Manual setup steps
+
+```bash
+curl --proto '=https' --tlsv1.2 -LsSf \
+  https://github.com/midnightntwrk/compact/releases/latest/download/compact-installer.sh | sh
+export PATH="$HOME/.local/bin:$PATH"
+compact update
+```
+
+---
+
+## Section 10: Concerns Compliance
+
+| Concern | Severity | How the PRD addresses it |
+|---|---|---|
+| Compact contract must compile | [C] | Section 4.1 specifies the exact contract; it compiles today with 3 circuits and 6 keys. R1 + DT-1 guard regression. |
+| Repo gate (topic label, Apache-2.0, README, deck, video) | [C] | Section 7.6 enumerates artifacts; R2 and R4 cover the two easiest to forget; SUBMISSION-CHECKLIST.md is the mechanical list. |
+| Hard deadline | [C] | Section 8 schedules against it and defines the 13:00 UTC safety line. R3 + DT-3. |
+| Demo must run without Docker | [C] | Section 9 states Docker is explicitly not required; Section 4.2 simulator runs in-process. R5 + DT-5. |
+| Trust assumption stated plainly | [C] | Section 1 and the roadmap state it; R6 + DT-6 make hiding it a tracked risk. |
+| Avoid saturated clusters | [I] | Section 1 competitive position; R9 enforces the language discipline. |
+| Tests must pass from clean clone | [I] | Section 7.5 60-second test; 22 tests currently pass. |
+| Scope realism | [I] | One vertical in Section 3, three roadmapped in Scene 6. R7 + DT-7. |
+| Visual polish advisory | [A] | Section 7.5 sets the two-pane view as the minimum; R8 allows cutting it without losing the gate. |
+| Wave 2/3 compounding | [A] | Acknowledged in R12; roadmap is written to be resubmittable. |
+
+All [C] concerns are addressed. No critical concern is unmitigated.
