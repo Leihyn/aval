@@ -1,0 +1,150 @@
+{
+  "version": "1.1",
+  "hackathon_name": "The Midnight Buildathon",
+  "project_name": "Aval",
+  "winning_idea": "Aval \u2014 prove money is committed but not yet arrived, so a counterparty can act now instead of waiting for settlement",
+  "source": "direct",
+  "status": "complete",
+  "current_phase": "complete",
+  "current_substep": null,
+  "phases_complete": [
+    "phase_0",
+    "phase_0a",
+    "phase_0b",
+    "phase_1",
+    "phase_1_5",
+    "phase_2",
+    "phase_2_5",
+    "phase_3",
+    "phase_3_5",
+    "phase_4"
+  ],
+  "autonomous_mode": true,
+  "working_dir": "/Users/machine/Desktop/dev/aval",
+  "timestamps": {
+    "started": "2026-09-16T04:40:00Z",
+    "completed": "2026-09-16T04:05:55Z"
+  },
+  "documents": {
+    "prd": "/Users/machine/Desktop/dev/aval/PRD.md",
+    "architecture": "/Users/machine/Desktop/dev/aval/ARCHITECTURE.md",
+    "architecture_sections_complete": [
+      "section_1",
+      "section_2",
+      "section_3",
+      "section_4",
+      "section_5",
+      "section_6",
+      "section_7",
+      "section_8",
+      "section_9",
+      "section_10",
+      "section_11",
+      "section_12",
+      "section_13",
+      "section_14",
+      "section_15",
+      "section_16",
+      "section_17",
+      "section_18",
+      "section_19"
+    ],
+    "implementation_plan": "/Users/machine/Desktop/dev/aval/PLAN.md",
+    "mini_verdict": null,
+    "deep_research": null
+  },
+  "quality_scores": {
+    "prd": {
+      "metrics_passed": "6/6",
+      "component_coverage": "5/5",
+      "flow_demo": "4 flows/6 scenes",
+      "api_risk": "PASS",
+      "concern_compliance": "5/5 [C]",
+      "impl_code": "0 blocks",
+      "risks": 13
+    },
+    "architecture": {
+      "metrics_passed": "6/6",
+      "files": 13,
+      "tags": 16,
+      "pseudocode": 0,
+      "file_headers": 13
+    },
+    "implementation_plan": {
+      "metrics_passed": "7/7",
+      "tasks": 22,
+      "decision_trees": 13,
+      "phases": 8,
+      "gates": 8
+    },
+    "cross_doc_audit": "PASS"
+  },
+  "corrections": [
+    "PRD M1: Alice client was in the Sec2 component table with no Sec4 spec \u2014 added 4.4",
+    "PRD M3: added R13 covering the off-chain preimage channel",
+    "PRD M6: recategorised R7 from Judging to Scope so all 6 risk categories are represented"
+  ],
+  "tech_stack": {
+    "family": "Smart Contracts + Frontend",
+    "languages": [
+      "Compact",
+      "TypeScript"
+    ],
+    "frameworks": [
+      "React 19",
+      "Vite 6",
+      "Tailwind v4",
+      "vitest"
+    ],
+    "deploy_target": "Vercel (frontend only)"
+  },
+  "technical_spike": {
+    "needed": true,
+    "unknowns": [
+      "Compact stdlib surface",
+      "in-circuit ECDSA availability",
+      "block time primitive",
+      "simulator/test path without Docker",
+      "runtime npm availability"
+    ],
+    "verified_patterns": [
+      "compact 0.5.2 / compiler 0.34.0 / language 0.26.0 / runtime 0.19.0 installed and executing",
+      "HistoricMerkleTree<10,Bytes<32>> + MerkleTreePath + merkleTreePathRoot + checkRoot compile",
+      "Set<Bytes<32>>.member/.insert and Counter.increment compile",
+      "kernel.blockTimeLessThan(Uint<64>) is BOUND \u2014 real on-chain expiry",
+      "kernel.self() and kernel.checkpoint() are BOUND",
+      "@midnight-ntwrk/compact-runtime@0.19.0 installs and loads on Node 25.6.1",
+      "CircuitContext state path is ctx.callContext.currentQueryContext.state",
+      "createCircuitContext accepts a time argument, enabling deterministic expiry tests",
+      "pureCircuits exports leaf_hash/nullifier_of/derive_id to JS \u2014 one hash definition system-wide",
+      "full compile emits 3 .zkir + 6 prover/verifier keys in 14.5s"
+    ],
+    "unverified_patterns": [
+      "Vite bundling of compact-runtime for the browser (DT-8 has a fallback)"
+    ],
+    "assumed_patterns": [
+      "demo video 2-4 min \u2014 no max length published in the rules"
+    ]
+  },
+  "scope_mode": "rush",
+  "project_type": "contract-only",
+  "project_type_rationale": "Compact contract plus TS harness is the deliverable; the React demo is a thin viewer over the simulator, not an app with its own backend or user accounts. Reclassify to full-stack only if the frontend gains independent state.",
+  "feature_observables_path": "/Users/machine/Desktop/dev/aval/FEATURE-OBSERVABLES.md",
+  "feature_observables_verified": "12/13",
+  "thesis": {
+    "1_winning_argument": "The gap between 'true' and 'publicly verifiable' is where working capital dies, and Midnight's dual ledger is the only place you can close it without revealing the fact.",
+    "2_evidence": "0 of 59 Wave-1 competitors touch in-flight state. Midnight's own 2026 messaging names 'institutional execution' and 'programmable compliance'.",
+    "3_demo_obligation": "The judge must WITNESS that the counterparty learns 'threshold cleared' while the chain learns nothing about the amount.",
+    "4_hero_flow": "Attestor registers a lock commitment; Alice proves the threshold in ZK; Bob's contract releases; the ledger shows a nullifier and no amount.",
+    "5_invariants": "No fabricated state in the demo. Every number on screen comes from a real circuit execution. The trust assumption is stated, never hidden.",
+    "6_drift_tripwires": "'a privacy bridge', 'a ZK credit score', 'an identity wallet'"
+  },
+  "thesis_gate": {
+    "THESIS-1": "PASS",
+    "THESIS-2": "PASS (peer re-derivation dispatched)",
+    "THESIS-3": "PASS",
+    "THESIS-4": "PASS",
+    "THESIS-5": "PASS"
+  },
+  "errors": []
+}

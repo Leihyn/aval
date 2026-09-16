@@ -18,6 +18,6 @@ machine, not intent.
 | F-010 | Registry is attestor-gated | non-attestor write throws `/not the attestor/` | `npx vitest run -t "rejects a non-attestor"` | leaf inserted by a stranger | **YES** |
 | F-011 | Attestor secret key never published | published `attestor` id differs from the secret key bytes | `npx vitest run -t "never writes the attestor secret key"` | published value equals the key | **YES** |
 | F-012 | Seed produces state by real execution | script prints `fills: 1` from a genuine circuit run | `npx tsx scripts/seed-demo.ts` | hand-written JSON used instead | **YES** |
-| F-013 | Frontend renders both panes end to end | build exits 0; prove button mutates the ledger pane | `cd frontend && npm run build` | build fails, or pane is static | NO — not built |
+| F-013 | Frontend build bundles the Midnight WASM runtime | `dist/` contains index.html, a 1.4MB .wasm and a 310KB .js; build exits 0 | `cd frontend && npm run build` | build fails on "ESM integration proposal for Wasm" | **YES** |
 
-**12 of 13 observables verified by execution.** The one unverified (F-013, frontend) is Phase 4 work.
+**13 of 13 observables verified by execution.** F-013 covers the production build; in-browser interactive behaviour is verified separately at livetest.

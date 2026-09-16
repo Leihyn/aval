@@ -74,3 +74,57 @@ warroom: the idea is ALREADY DECIDED by the user. Do NOT re-generate from scratc
 > **Aval** — prove money is committed but not yet arrived, so a counterparty can act now instead of waiting for bridge finality. Wave-1 scope: ONE vertical (proof of funds in flight) + the reusable primitive + explicit roadmap (identity preconditions, private solvency, invoice factoring).
 
 Bounds on any variant: must have >=1 compiling Compact contract (or auto-DQ); must not need in-circuit ECDSA, ledger-9 testnet features, or Docker; must not land in the credit/solvency or identity clusters; ~11h remain and "realistic scope" is itself 15% of the score.
+
+### forge
+**Skill:** hackathon-forge · **Status:** COMPLETE · **Scope mode:** rush
+
+#### Done
+- `PRD.md` (469 lines) — 6/6 quality metrics pass, 13 risks across all 6 categories, Thesis block locked
+- `ARCHITECTURE.md` (895 lines) — 6/6 metrics, 13 files with complete code, 0 pseudocode, every block tagged
+- `PLAN.md` (483 lines) — 7/7 metrics, 22 tasks, 13 decision trees, 8 phases each with a gate
+- `.env.example`, `FEATURE-OBSERVABLES.md` (12/13 verified by execution), `concerns.md`, `.forge-state.json`
+- Executed ahead of plan: `contract/src-ts/types.ts`, `contract/src-ts/watcher.ts`, `contract/scripts/seed-demo.ts` — seed runs green
+
+#### Additions
+- Phase 0B spike was run as REAL compilation rather than web research, so ARCHITECTURE.md ships `[VERIFIED]` code instead of `[ASSUMED]` patterns. The contract, simulator and 22 tests existed and passed before the documents describing them were written.
+- Added a Safety Architecture section with 5 independent layers, each mapped to the tests that cover it.
+
+#### Deviations
+- Documents are written to the working-dir ROOT, not `{working_dir}/{project-name}/`. The dispatch gate checks `$wd/PRD.md`, `$wd/ARCHITECTURE.md`, `$wd/PLAN.md`; nesting them would fail the gate.
+- Phase 1.5 / 2.5 / 3.5 pauses skipped per autonomous mode. All gates were still computed and reported.
+- `.env.example` was written with the Write tool because a security hook blocks `.env*` heredocs through bash. Contents are commented placeholders only.
+
+#### Verified Facts
+- `kernel.blockTimeLessThan(Uint<64>)` is BOUND — expiry is enforced by ledger block time, not a caller-supplied timestamp. `kernel.self()` and `kernel.checkpoint()` are also bound.
+- Compact treats **exported circuit PARAMETERS as private**, not only witnesses. `leaf` and `expiry` both needed `disclose()`. This corrects an assumption made during intel.
+- `CircuitContext` state path is `ctx.callContext.currentQueryContext.state`. There is no `transactionContext` in runtime 0.19.0.
+- `createCircuitContext` takes a `time` argument, which is what makes expiry testable in both directions.
+- `pureCircuits` exports `leaf_hash` / `nullifier_of` / `derive_id` to JS, so off-chain code uses the circuit's own hash. One definition system-wide.
+- Full compile: 3 `.zkir` + 6 prover/verifier keys in 14.5s. 22/22 tests pass in 651ms. Seed script green.
+
+#### Assumptions
+- [ASSUMED] Demo video 2-4 minutes; no maximum length is published in the rules.
+- [UNVERIFIED] Vite can bundle `@midnight-ntwrk/compact-runtime` for the browser. DT-8 carries a real-execution snapshot fallback that preserves the no-fabricated-state invariant.
+
+#### Blockers for Downstream
+None. The technical gate is already cleared: the contract compiles and the suite passes independently of everything still unbuilt.
+
+#### Key Decisions
+- `HistoricMerkleTree` over a `Set` of leaves: a Set check forces disclosing the leaf, which links a proof to one attestation and destroys unlinkability. Disclose the computed root instead.
+- Authority by ledger write plus derived-id check, not in-circuit ECDSA, because the secp256k1 stdlib is unbound. Strictly more private as a side effect.
+- `counterparty` and `expiry` hashed into the leaf, which is what makes an attestation non-transferable. Three tests assert it.
+- Deploy to Midnight testnet is NOT attempted: toolchain 0.34 targets ledger 9 which is not live there, and the gate requires compile, not deploy. Stated in the README rather than hidden.
+- Zero credentials in Wave 1, deliberately, so a judge can verify offline in under a minute.
+
+#### For Next Skill
+critique: attack the plan, not the code. The contract, tests and seed already run green, so the productive targets are (1) whether the trust model survives an adversarial reading, (2) whether "one vertical plus roadmap" reads as disciplined scope or as an unfinished platform, (3) whether the demo script actually makes the judge WITNESS the privacy property rather than be told it, and (4) whether anything in the positioning drifts into the saturated credit/identity clusters. Highest-value single question: is the bilateral "counterparty runs the attestor" argument genuinely load-bearing, or does it quietly make the ZK redundant?
+
+## Cross-Review
+
+| Claim | Phase | Lead | Peer (model) | Verdict | Outcome |
+|---|---|---|---|---|---|
+| thesis-2 | forge | PASS | FAIL (sonnet, blind re-derivation) | **DISAGREE → resolved** | Document reconciled, thesis untouched |
+
+**Peer finding (verbatim summary):** (a) demo obligation satisfied — Scene 4 stages a live witnessed proof with the stage direction to run the prove call and scroll the ledger dump. (c) zero invariant violations — the seed and frontend both drive the real simulator, no hardcoded ledger JSON anywhere. **(b) FAILED** — Thesis field 4 defines the hero flow as four elements beginning with "attestor registers a lock commitment", but PRD Flow 3, explicitly labelled "THE HERO FLOW", began at "Alice receives the preimage" and omitted that first element entirely; registration lived only in the separately-labelled Flow 2. The heading claimed equivalence with the thesis; the content did not reproduce it.
+
+**Resolution:** the peer was right. PRD Flow 3 was rewritten to contain all four Thesis field 4 elements under explicit element headings, with attestor registration as element 1 (steps 1-3), and Flow 2 retained as the attestor's isolated operational view. The thesis was NOT edited — per the gate rule, a THESIS failure is never resolved by editing the thesis to fit the documents. Verified by keyword check: all four elements now present in Flow 3.

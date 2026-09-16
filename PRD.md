@@ -144,14 +144,32 @@ Across all 59 Wave 1 submissions, **zero** address in-flight or pending settleme
 
 ### Flow 3 — Proof of funds in flight (THE HERO FLOW)
 
-1. Alice receives the preimage from the watcher off-chain.
-2. Alice's client builds the witness: `lock_id`, `amount`, `salt`, and the Merkle path found via `findPathForLeaf`.
-3. Alice calls `prove_funds_in_flight(required, counterparty, expiry)`.
-4. Circuit recomputes the leaf, discloses only the computed root, asserts membership.
-5. Circuit asserts `blockTimeLessThan(expiry)`.
-6. Circuit discloses only the boolean `amount >= required`.
-7. Circuit derives the nullifier, asserts unspent, inserts it, increments `fills`.
-8. Bob's contract observes the fill and releases his leg.
+This flow is the Thesis field 4 hero flow end to end, and it deliberately contains all
+four of its elements. Flow 2 above is the attestor's isolated operational view of
+element 1; it is restated here as step 1 because the hero flow is not the hero flow
+without it.
+
+**Element 1 — the attestor registers a lock commitment**
+
+1. Bob's watcher observes `Locked(lockId, amount, beneficiary, expiry)` on the source chain.
+2. It computes `leaf = leaf_hash(lock_id, amount, counterparty, expiry, salt)` and calls `register_attestation(leaf)`. The leaf enters the historic Merkle tree. Only a hash goes on-chain.
+3. It delivers the preimage `(lock_id, amount, salt)` to Alice off-chain.
+
+**Element 2 — Alice proves the threshold in ZK**
+
+4. Alice's client builds the witness: `lock_id`, `amount`, `salt`, and the Merkle path found via `findPathForLeaf`.
+5. Alice calls `prove_funds_in_flight(required, counterparty, expiry)`.
+6. Circuit recomputes the leaf, discloses only the computed root, asserts membership.
+7. Circuit asserts `blockTimeLessThan(expiry)`.
+8. Circuit discloses only the boolean `amount >= required`.
+
+**Element 3 — the ledger shows a nullifier and no amount**
+
+9. Circuit derives the nullifier from the private `lock_id` and `salt`, asserts it is unspent, inserts it, and increments `fills`. The amount is never written.
+
+**Element 4 — Bob's contract releases**
+
+10. Bob's contract observes the fill and the nullifier, and releases his leg immediately rather than waiting for source-chain settlement.
 
 **Error cases:**
 - Amount below threshold → "locked amount below required threshold"
