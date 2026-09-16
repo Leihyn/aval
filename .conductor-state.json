@@ -33,7 +33,7 @@
     ],
     "demoFormat": "recorded",
     "demo": {
-      "logo_description": "Aval — trade-finance guarantee mark, midnight/dark palette",
+      "logo_description": "Aval \u2014 trade-finance guarantee mark, midnight/dark palette",
       "music_vibe": "none",
       "creative_overrides": "let skill decide"
     },
@@ -45,21 +45,22 @@
     "phase_policy": "USER DIRECTIVE: do not skip any phase. All 19 run at full depth. Safety line at 2026-09-16T13:00:00Z: package a submittable bundle from whatever exists; report unrun phases as not-run."
   },
   "pipeline": {
-    "current_phase": "intel",
+    "current_phase": "forge",
     "phases": {
       "intel": {
-        "status": "running",
+        "status": "complete",
         "dispatched_at": "2026-09-16T03:30:08Z",
-        "completed_at": null
+        "completed_at": "2026-09-16T03:44:56Z"
       },
       "warroom": {
-        "status": "pending",
-        "dispatched_at": null,
-        "completed_at": null
+        "status": "skipped",
+        "dispatched_at": "2026-09-16T03:45:11Z",
+        "completed_at": "2026-09-16T03:46:19Z",
+        "note": "SKIPPED for two independent reasons, neither of which is time pressure. (1) SKILL NOT INSTALLED: ~/.claude/skills/hackathon-warroom does not exist on this machine; it is referenced by phase-catalog.md but absent. All 16 other phase skills verified present. (2) DOCUMENTED SKIP CONDITION MET: phase-catalog.md line 127 \u2014 'If user already has a specific idea: skip warroom, set pipeline.phases.warroom.status = skipped. Checkpoint 2 still fires using the warroom-skipped variant.' The user selected the idea directly; Checkpoint 2 (idea_selection) is already answered in checkpoints_answered."
       },
       "forge": {
-        "status": "pending",
-        "dispatched_at": null,
+        "status": "running",
+        "dispatched_at": "2026-09-16T03:47:11Z",
         "completed_at": null
       },
       "critique": {
@@ -143,9 +144,36 @@
       }
     }
   },
-  "artifacts": {},
-  "intelState": null,
-  "warroomState": null,
+  "artifacts": {
+    "intel": {
+      "research_path": "/Users/machine/Desktop/dev/aval/research/research-brief.md",
+      "config_path": "/Users/machine/Desktop/dev/aval/config.json",
+      "state_path": "/Users/machine/Desktop/dev/aval/intel-state.json"
+    }
+  },
+  "intelState": {
+    "status": "complete",
+    "sourceCount": 8,
+    "qualityGate": {
+      "specificity": 5,
+      "evidence": 5,
+      "novelty": 5,
+      "competitor_depth": 4,
+      "actionability": 5,
+      "average": 4.8,
+      "result": "PASS"
+    },
+    "keyFinding": "In-flight settlement category is EMPTY (0 of 59 submissions). Dev infra ~1. Credit/solvency 15 and identity 8 are saturated; identity contains a returning 3rd-place Midnight winner (bytewizard42i, 3 entries this wave).",
+    "criticalConstraint": "No in-circuit ECDSA on Midnight (Secp256k1* unbound in shipped 0.34.0). Deploy NOT required \u2014 gate is compile-only, no Docker needed."
+  },
+  "warroomState": {
+    "status": "skipped",
+    "reason": "skill not installed AND documented skip condition met (user supplied the idea)",
+    "selected_idea": "Aval \u2014 prove money is committed but not yet arrived, so a counterparty can act now instead of waiting for bridge finality",
+    "ideas_alive": 1,
+    "ideas_killed": 0,
+    "deliberation": "none \u2014 single user-selected idea"
+  },
   "forgeState": null,
   "critiqueState": null,
   "buildState": null,
@@ -171,7 +199,7 @@
   },
   "dispatch_context": {
     "mode": "fresh",
-    "target_skill": null,
+    "target_skill": "hackathon-forge",
     "attempt": 1,
     "max_attempts": 3,
     "working_dir": "/Users/machine/Desktop/dev/aval",
@@ -185,8 +213,8 @@
   "continuation_manifest": {
     "continuation_count": 0,
     "max_continuations": 5,
-    "last_completed_phase": null,
-    "next_expected_phase": "intel",
+    "last_completed_phase": "warroom",
+    "next_expected_phase": "forge",
     "spawned_at": "2026-09-16T03:28:27Z"
   },
   "retry_ledger": {},
@@ -194,7 +222,7 @@
     "manifest": true,
     "idea_selection": {
       "answered": true,
-      "choice": "Aval — proof of funds in flight on Midnight",
+      "choice": "Aval \u2014 proof of funds in flight on Midnight",
       "modifications": "User chose the vertical directly: prove money committed but not yet arrived so a counterparty can act now. Wave-1 scope = ONE vertical (funds in flight) + primitive + roadmap for identity/solvency/invoices."
     },
     "post_forge_credentials": {

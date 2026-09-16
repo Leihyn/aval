@@ -4,3 +4,5 @@
 node_modules/
 contract/out/
 .DS_Store
+contract/out-full/
+contract/node_modules/
