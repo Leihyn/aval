@@ -33,7 +33,7 @@ contract/src/inflight.compact compiles to 2 circuits plus a constructor. A Histo
 It is an instrument, not a statement: single use (the nullifier), counterparty bound (the payee is in the leaf), expiring (ledger time).
 
 TESTING
-31 tests pass from a clean clone with no toolchain installed:
+31 tests pass from a clean clone:
   git clone https://github.com/Leihyn/aval && cd aval/contract
   npm install && npm test
 
