@@ -83,7 +83,7 @@ aval/
 │   │   └── keys/*.prover|.verifier
 │   ├── test/
 │   │   ├── simulator.ts               # in-process harness
-│   │   └── inflight.test.ts           # 22 tests
+│   │   └── inflight.test.ts           # 23 tests
 │   ├── src-ts/
 │   │   ├── watcher.ts                 # attestor: source chain -> Midnight
 │   │   └── types.ts                   # shared types
@@ -144,7 +144,7 @@ The complete protocol. Three circuits: bootstrap an attestor, register a lock co
 
 **Why no ECDSA.** The obvious design verifies an attestor's Ethereum signature inside the circuit. That is impossible here: `Secp256k1Point`, `Secp256k1Scalar`, `Secp256k1Base` and `secp256k1EcdsaVerify` are all UNBOUND in the shipped 0.34.0 standard library, despite the release notes describing them. Verified by compiling a probe. Authority therefore comes from *writing to the ledger*, authenticated by Midnight's own transaction layer, plus a derived-id equality check. This is also strictly more private: a signature check would force Alice to reveal which attestation she used.
 
-**Why counterparty and expiry are bound into the leaf.** Both are public circuit arguments, but hashing them into the commitment is what makes an attestation non-transferable. Change either and the recomputed leaf matches nothing in the tree. Three of the 22 tests assert exactly this.
+**Why counterparty and expiry are bound into the leaf.** Both are public circuit arguments, but hashing them into the commitment is what makes an attestation non-transferable. Change either and the recomputed leaf matches nothing in the tree. Three of the 23 tests assert exactly this.
 
 **Why `kernel.blockTimeLessThan` and not a caller-supplied timestamp.** A `now` parameter would let the prover backdate. The ledger's own block time cannot be forged by the caller.
 
@@ -315,7 +315,7 @@ The witness `find_path` reads the PUBLIC tree via `ctx.ledger.attestations.findP
 ### Code
 
 #### File: `contract/test/simulator.ts`
-`[VERIFIED]`, executed; 22 tests pass against it.
+`[VERIFIED]`, executed; 23 tests pass against it.
 
 See the file on disk. Its exported surface, which everything else depends on:
 
@@ -353,7 +353,7 @@ Prove the security properties mechanically, and prove the privacy property by as
 ### Code
 
 #### File: `contract/test/inflight.test.ts`
-`[VERIFIED]`, 22 tests, all passing, 671ms.
+`[VERIFIED]`, 23 tests, all passing, 671ms.
 
 Structure (full source on disk):
 
@@ -785,7 +785,7 @@ submission/
 ├── links.md          # repo, live URL, video, deck                          (package phase)
 └── screenshots/
     ├── two-pane.png  # the money shot                                       (demo phase)
-    └── tests.png     # 22 passing                                           (demo phase)
+    └── tests.png     # 23 passing                                           (demo phase)
 ```
 
 No `sponsor-tracks.md`: this buildathon has a single track.
@@ -832,7 +832,7 @@ Wave 1 deliberately requires **zero credentials**. A judge clones and runs. The 
 |---|---|---|---|
 | Contract compiles | `contract/src/inflight.compact` | `compact compile src/inflight.compact out` | PASSING, 3 circuits |
 | Full compile with keys | same | `compact compile src/inflight.compact out-full` | PASSING, 6 keys, 14.5s |
-| Unit + security + privacy | `contract/test/inflight.test.ts` | `npm test` | PASSING, 22/22 |
+| Unit + security + privacy | `contract/test/inflight.test.ts` | `npm test` | PASSING, 23/23 |
 | Seed script | `contract/scripts/seed-demo.ts` | `npx tsx scripts/seed-demo.ts` | not yet run |
 | Frontend build | `frontend/` | `npm run build` | not yet run |
 
@@ -846,7 +846,7 @@ Wave 1 deliberately requires **zero credentials**. A judge clones and runs. The 
 
 1. `inflight.compact` → everything. Nothing can be typed until the compiler emits `index.d.ts`. **DONE.**
 2. `test/simulator.ts` → tests, watcher, seed, frontend. All four import it. **DONE.**
-3. `test/inflight.test.ts` → gates everything downstream; a red suite means stop. **DONE, 22/22.**
+3. `test/inflight.test.ts` → gates everything downstream; a red suite means stop. **DONE, 23/23.**
 4. `src-ts/types.ts` → watcher, seed.
 5. `src-ts/watcher.ts` → seed script.
 6. `scripts/seed-demo.ts` → demo screenshots.
@@ -865,7 +865,7 @@ Wave 1 deliberately requires **zero credentials**. A judge clones and runs. The 
 | Order | Service | Startup command | Health check | Depends on | Env vars |
 |---:|---|---|---|---|---|
 | 1 | Contract build | `cd contract && npx compact compile src/inflight.compact out` | `ls out/contract/index.js` | compact toolchain on PATH | none |
-| 2 | Test suite | `cd contract && npm install && npm test` | exit 0, "22 passed" | 1 | none |
+| 2 | Test suite | `cd contract && npm install && npm test` | exit 0, "23 passed" | 1 | none |
 | 3 | Frontend build | `cd frontend && npm install && npm run build` | `ls dist/index.html` | 1 | none |
 | 4 | Vercel deploy | `vercel deploy --prod` (root `frontend/`) | HTTP 200 on the deploy URL | 3 | none |
 
@@ -890,7 +890,7 @@ No Midnight testnet deployment in Wave 1. Toolchain 0.34 targets ledger 9, which
 
 | From | To | Protocol | Credential | Health check | Priority |
 |---|---|---|---|---|---|
-| Test suite | compiled contract | in-process import | none | `npm test` → 22 passed | P0 |
+| Test suite | compiled contract | in-process import | none | `npm test` → 23 passed | P0 |
 | Simulator | `@midnight-ntwrk/compact-runtime` | npm import | none | `node -e "import('@midnight-ntwrk/compact-runtime')"` | P0 |
 | Watcher | compiled contract `pureCircuits` | in-process import | none | `leaf_hash` returns 32 bytes | P1 |
 | Frontend | simulator | bundler alias `@contract` | none | `npm run build` exits 0 | P1 |

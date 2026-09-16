@@ -8,7 +8,7 @@ Built on [Midnight](https://midnight.network) for the Midnight Buildathon, Wave 
 
 ```bash
 cd contract && npm install && npm test
-# → Tests  22 passed (22)
+# → Tests  23 passed (22)
 ```
 
 No Docker. No proof server. No wallet. No RPC endpoint. No API keys. Clone and run.
@@ -123,7 +123,7 @@ The test suite asserts this structurally rather than field by field, so a newly 
 ```bash
 cd contract
 npm install
-npm test          # 22 passed
+npm test          # 23 passed
 ```
 
 **Recompile the contract:**
@@ -151,7 +151,7 @@ Everything below was produced by running the code, not by describing it.
 |---|---|---|
 | Contract compiles (the Technical Gate) | `compact compile src/inflight.compact out` | 3 `.zkir` circuits |
 | Proving keys generate | `compact compile src/inflight.compact out-full` | 6 keys, 14.5s |
-| Test suite | `npm test` | **22 / 22 passed**, 651ms |
+| Test suite | `npm test` | **22 / 23 passed**, 651ms |
 | Seed script | `npx tsx scripts/seed-demo.ts` | 3 attestations, 1 fill, amount absent |
 | Frontend build | `cd frontend && npm run build` | 1.4MB wasm + 310KB js, exit 0 |
 
@@ -258,7 +258,7 @@ Offered because a prior Midnight hackathon scored "feedback on Midnight's develo
 |---|---|
 | `contract/src/inflight.compact` | The contract, 3 circuits |
 | `contract/test/simulator.ts` | In-process harness, injectable block time |
-| `contract/test/inflight.test.ts` | 22 tests |
+| `contract/test/inflight.test.ts` | 23 tests |
 | `contract/src-ts/watcher.ts` | Attestor: source chain to Midnight |
 | `contract/scripts/seed-demo.ts` | Real-execution demo seed |
 | `frontend/` | Two-pane demo |

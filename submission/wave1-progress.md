@@ -6,7 +6,7 @@ Aval was started and completed inside Wave 1. There is no prior submission to di
 
 **The contract.** `contract/src/inflight.compact`, three circuits: `register_attestor`, `register_attestation`, `prove_funds_in_flight`. Compiles to three ZKIR circuits and six proving/verifier keys. Private state is carried by five witnesses; six explicit `disclose()` sites bridge private to public, each annotated in source with what an observer actually learns.
 
-**A test suite that asserts the privacy claim rather than stating it.** 22 tests, all passing, covering attestor bootstrap, registry access control, the threshold path including the exact-equality boundary, nullifier-based double-spend prevention, non-transferable binding (counterparty swap, amount inflation, expiry extension all rejected), block-time expiry in both directions, and four privacy tests that serialise the entire public ledger and assert the amount does not appear in it.
+**A test suite that asserts the privacy claim rather than stating it.** 23 tests, all passing, covering attestor bootstrap, registry access control, the threshold path including the exact-equality boundary, nullifier-based double-spend prevention, non-transferable binding (counterparty swap, amount inflation, expiry extension all rejected), block-time expiry in both directions, and four privacy tests that serialise the entire public ledger and assert the amount does not appear in it.
 
 **An attestor watcher and a seed script**, both driving the real simulator. The watcher computes commitments with `pureCircuits.leaf_hash` exported by the compiler rather than a reimplementation, so there is exactly one definition of the commitment in the system.
 
