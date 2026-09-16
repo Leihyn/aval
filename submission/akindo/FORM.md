@@ -28,82 +28,14 @@ YouTube Studio -> Subtitles -> Add -> Upload file -> With timing
 
 ## YouTube upload
 
-### Title  *(80 chars, under the 100 limit)*
+Title, description, chapters, tags and settings live in their own file so there
+is only one copy to keep right:
 
 ```
-Aval: prove funds are committed before they arrive, without revealing the amount
+submission/akindo/YOUTUBE.md
 ```
 
-### Description
-
-Paste everything inside the block. The first two lines are what shows before
-"Show more", so they carry the hook. The timestamps are real scene boundaries
-and will render as chapters (10 of them, each over YouTube's 10 second minimum).
-
-```
-$2M leaves Ethereum at 09:00 and lands at 09:41. For 41 minutes that money is real, it is irrevocable, and it is useless, because nobody releases their side against a screenshot.
-
-Aval closes that window. It proves money is committed but not yet arrived, so a counterparty can act now instead of waiting for settlement, and it does that without putting the amount on a public chain.
-
-Alice locks funds in escrow on a source chain. She proves to Bob's Midnight contract that the locked amount clears his threshold and is earmarked for him, without revealing how much she locked, which lock it was, or who she is. The public ledger records a Merkle root, a nullifier and a fill count. It never records an amount.
-
-VERIFY IT YOURSELF, in under a minute. No Docker, no proof server, no wallet:
-
-  git clone https://github.com/Leihyn/aval && cd aval/contract
-  npm install && npm test        -> 31 passed
-
-CHAPTERS
-0:00 The dead window
-0:22 What crosses, and what never does
-0:38 It compiles, and 31 tests pass
-0:55 Can an observer tell 50,000 from 5,000,000?
-1:13 A proof you spend, not one you show
-1:26 Running in a browser
-1:41 Six attacks, six reverts
-1:55 We broke it ourselves
-2:17 The honest part
-2:38 One predicate today, and what is next
-
-WHAT MAKES IT AN INSTRUMENT RATHER THAN A STATEMENT
-Single use: a nullifier derived from the private lock id and salt, so one lock backs exactly one proof, ever.
-Counterparty bound: the payee is hashed into the leaf, so the proof is not transferable.
-Expiring: enforced with kernel.blockTimeLessThan against ledger time, not a caller timestamp.
-
-THE HONEST PART
-Midnight cannot see Ethereum, and there is no trustless answer to that without a light client. In the bilateral deployment the counterparty runs the attestor themselves. A malicious attestor can still fabricate a lock, which is the same trust model as every fast finality bridge shipping today. Aval adds privacy to that model, it does not claim to beat it.
-
-We also broke our own contract during review. The Merkle path is a witness, it runs on the prover's machine and is never verified, so a hostile prover could return the path of a different leaf and claim any amount. One assert line fixed it, and that exploit is now a permanent regression test rather than a footnote.
-
-BUILT WITH
-Compact (language 0.26.0, compiler 0.34.0), @midnight-ntwrk/compact-runtime 0.19.0, TypeScript, vitest, React 19, Vite 6, Tailwind v4.
-
-Repo: https://github.com/Leihyn/aval
-License: Apache-2.0
-Submitted to the Midnight Buildathon, Wave 1.
-```
-
-### Settings
-
-| Field | Value |
-|---|---|
-| Visibility | **Unlisted** or **Public**, never Private |
-| Category | Science & Technology |
-| Audience | Not made for kids |
-| Language | English |
-| Captions | Upload `aval-demo.srt` (Subtitles, Add, Upload file, With timing) |
-| Comments | your call, nothing depends on it |
-
-### Tags
-
-Paste as a comma separated list:
-
-```
-Midnight Network, zero knowledge, ZK proofs, Compact language, privacy, cross chain, bridge, settlement, proof of funds, Merkle proof, nullifier, DeFi, market infrastructure, hackathon, Midnight Buildathon, blockchain privacy, smart contracts, TypeScript, React
-```
-
-> The burned-in captions mean the video reads with the sound off. Uploading the
-> `.srt` on top gives YouTube a selectable track its search can index, which is
-> a different job from the pixels and worth doing as well.
+Come back here with the URL and put it under `## Video`.
 
 ---
 
