@@ -26,9 +26,10 @@ Phases 1 and 2 are already complete at the time of writing. They are documented 
 |---|---|---:|---|---|
 | 1 | Toolchain and contract | 1.0h | none | **COMPLETE** |
 | 2 | Simulator and test suite | 1.5h | 1 | **COMPLETE** |
-| 3 | Watcher, types, seed script | 0.5h | 2 | pending |
-| 4 | Demo frontend | 1.5h | 2 | pending |
-| 5 | README, LICENSE, domain guide | 0.75h | 3 | pending |
+| 2b | **Critique elevations (E-1, E-3, E-4, E-5, E-6)** | 1.25h | 2 | **pending, do FIRST** |
+| 3 | Watcher, types, seed script | 0.5h | 2 | **COMPLETE** |
+| 4 | Demo frontend | 1.5h | 2 | **COMPLETE** (build verified; in-browser run NOT verified, see 7.2) |
+| 5 | README, LICENSE, domain guide | 0.75h | 3 | partial (README + LICENSE done, DOMAIN-GUIDE.md missing) |
 | 6 | Slide deck and demo video | 1.5h | 4 | pending |
 | 7 | Deploy and livetest | 0.75h | 4 | pending |
 | 8 | Package and submit | 0.75h | 5,6,7 | pending |
@@ -172,6 +173,124 @@ Commit: `test: 22 passing simulator tests covering access control, nullifiers, b
 
 ---
 
+## Section 4b: Phase 2b, Critique Elevations  [DO THIS BEFORE PHASE 5-8]
+
+<!-- [CRITIQUE] Added by hackathon-critique. Build follows this plan literally, so an
+     approved elevation absent from here is an elevation that never ships. -->
+
+Five approved elevations plus one deferred. Total about 1.25h. Every one of them is
+prose or a single test except Task 2b.2, which is the one that matters most.
+
+### Task 2b.1: Indistinguishability test  [E-1, approved]
+
+Add to `contract/test/inflight.test.ts`, in the `privacy` describe block. Full spec in
+**PRD.md Section 4.2a**.
+
+Two simulators, identical except the locked amount (50_000 vs 5_000_000), same
+`lock_id`, `salt`, `counterparty`, `expiry`, `required`. Both prove successfully. Assert:
+
+```
+attestor            byte-identical
+attestor_registered identical
+fills               identical (1n)
+spent (nullifiers)  BYTE-IDENTICAL   <- the load-bearing assertion
+root                differs
+```
+
+Also fix the two defects in the existing privacy group while you are in the file:
+- `never exposes the locked amount` builds `root: Array.from(sim.public.attestations.root().field ?? [])`. The `?? []` makes the test pass silently if `.field` is ever undefined. Remove the fallback and assert the root is non-empty first.
+- `reveals only an aggregate fill count` asserts `fills === 1n` and nothing else. It is a duplicate of the money-path test and asserts no privacy property. Either delete it or make it assert that `fills` is the ONLY monotone public counter.
+
+```bash
+cd contract && npx vitest run
+```
+
+**HARD REQUIREMENT, count propagation:** the passing count changes. In the SAME commit,
+update every occurrence of `22` as a test count in `README.md`, `PRD.md`,
+`ARCHITECTURE.md`, `FEATURE-OBSERVABLES.md`, `PLAN.md`, the deck and the demo script.
+Verify with `grep -rn "22 " *.md | grep -i test`. A stale count is a verifiability
+defect in a submission whose entire pitch is verifiability.
+
+Add an `F-014` row to `FEATURE-OBSERVABLES.md` for this test.
+
+Commit: `test: indistinguishability, two amounts 100x apart produce identical public state`
+
+### Task 2b.2: Render the real ledger object in the right pane  [E-3, DEFERRED, highest value]
+
+**Not auto-approved** (it changes existing frontend behaviour). Do it if there is any
+time at all; it is the single highest-leverage change in the submission.
+
+`frontend/src/lib/demo.ts` `readLedger` hand-authors five fields and truncates each with
+`.slice(0, 24)`. The PRD and ARCHITECTURE both described that pane as a "literal dump"
+until critique corrected the wording. The deeper problem is epistemic: **the pane would
+look exactly the same if the contract DID write the amount and the renderer simply had
+no `amount` key.** The judge is being asked to trust the renderer, which is the one
+thing the product says they should not have to do.
+
+1. Enumerate the ledger object's own fields rather than a hardcoded list, so a new
+   public field appears automatically.
+2. Stop truncating, or show full value on hover. A truncated hash reads as hiding.
+3. Remove the `?? ''` fallback on `attestations.root().field` — same silent-pass defect
+   as the test.
+4. Add a second mode to the UI: run the proof at two different amounts and render both
+   ledger states side by side with the differing line highlighted. This is the Scene 4
+   money shot from **PRD.md Section 6** and the video needs it on screen.
+
+### Task 2b.3: Trust-model and leakage honesty  [E-4, approved]
+
+Propagate **PRD.md Section 1 "Who learns what"** and **"What an observer still learns"**
+into `README.md` under `## Trust model`. The three things that must reach the README:
+
+1. In the bilateral deployment **Bob already knows the amount** (he computes the leaf
+   from it) and can recompute the nullifier. The README currently opens by selling "do
+   not reveal the amount to your counterparty", which the shipped trust model
+   contradicts. Say what the ZK actually buys: privacy from the chain and every third
+   party, plus a machine-checkable gate Bob's contract can act on without Bob.
+2. Privacy *from the counterparty* is the k-of-n roadmap rung, and the reason that
+   roadmap is credible is that **`prove_funds_in_flight` does not change to get there** —
+   the circuit never learns which attestor inserted the leaf, so only
+   `register_attestation` changes. The money circuit is already quorum-ready.
+3. The leakage table: `fills` and proof timing leak deal count and cadence; tree size
+   bounds outstanding commitments; the attestor id identifies the deployment.
+
+Add to `README.md` `## What is NOT built`:
+- `register_attestor` is one-shot. No rotation, no revocation. A lost attestor key permanently bricks the registry.
+- The nullifier set is per-deployment, so cross-counterparty reuse is prevented by the beneficiary binding in the leaf, not by the nullifier.
+
+### Task 2b.4: De-cluster the positioning  [E-5, approved]
+
+A blind peer re-derivation given only `research/research-brief.md` and `PRD.md` scored
+this positioning **similar**, not differentiated: the construction (attested Merkle leaf
+plus threshold predicate plus nullifier) is what 23 of the 59 entries are building, and
+the demo's own closing line said so out loud.
+
+1. **README roadmap table:** the Wave 2 row reads `kyc_passed AND jurisdiction NOT IN sanctioned` and the Wave 3 row reads `reserves >= liabilities`. Those are the two categories intel killed (8 and 15 competitors). Reorder so **"Real source-chain attestor: live listener, k-of-n quorum, encrypted preimage channel"** is the first Wave 2 row, because it is the credibility item. Reframe the other rows toward settlement moments: delivery-versus-payment, letters of credit, invoice factoring.
+2. **Add the differentiator to the README**, verbatim from **PRD.md Section 1 "Why this is not a solvency proof with a different label"**: single use, counterparty-bound, expiring. Three mechanisms, nine tests. That is the difference between a proof you show and a proof you spend.
+3. **Deck and video** use the rewritten **PRD.md Section 6 Scene 6**. Do not reintroduce "KYC" or "reserves" in any judge-facing artifact. `grep -rn -i "kyc\|reserves cover" *.md` must come back clean except inside the critique comments explaining why.
+
+### Task 2b.5: Name the product  [E-6, approved]
+
+`README.md` never explains what "Aval" means. A judge scoring 59 entries sees a word
+they do not know. One line, high on the page:
+
+> An aval is a trade-finance term: a third party's guarantee that a payment will happen. Aval replaces the guarantor with a proof.
+
+It also reinforces the trade-finance frame, which is the frame that keeps this out of
+the credit and identity clusters.
+
+### Phase 2b gate
+
+- [ ] Indistinguishability test added and passing
+- [ ] `?? []` and `?? ''` silent-pass fallbacks removed from the test and from `demo.ts`
+- [ ] Test count updated everywhere; `grep -rn "22" *.md | grep -i test` returns nothing stale
+- [ ] README states that the bilateral counterparty already knows the amount
+- [ ] README carries the leakage table and the two structural gaps
+- [ ] README carries the single-use / counterparty-bound / expiring differentiator
+- [ ] No "KYC" or "reserves" in any judge-facing artifact
+- [ ] README explains the name
+
+---
+
 ## Section 5: Phase 3, Watcher, Types, Seed Script
 
 ### Task 3.1: Extract shared types
@@ -301,8 +420,21 @@ Expected: `Apache License`
 
 #### Decision Point DT-2: the licensing or repo-topic gate is missed
 
-These are the two cheapest auto-DQs in the competition.
+These are the two cheapest gate failures to hit.
 
+<!-- [CRITIQUE] Verified 2026-09-16T04:23Z: `git remote -v` in this repo returns NOTHING.
+     There is no GitHub remote. Five commits exist locally and none of them are pushed.
+     The gate is not "add a topic to the repo", it is "the repo does not exist yet".
+     Until `git remote -v` shows an origin and the repo is public, three separate gate
+     items (public repo, topic label, Apache-2.0 visible) are all unmet at once. -->
+
+0. **The repo has no remote.** Verify first, before anything else:
+   ```bash
+   git remote -v                 # currently EMPTY
+   gh repo create aval --public --source=. --remote=origin --push
+   git remote -v && git log --oneline -1
+   ```
+   Then load the public URL in a logged-out browser and confirm it renders.
 1. `LICENSE` must exist at the repo root and be Apache-2.0. Verify: `head -2 LICENSE`.
 2. The GitHub repo must carry the **`midnightntwrk` topic label**. This is a repository topic, not a file, and it is invisible from the local clone.
    ```bash
@@ -403,11 +535,42 @@ Expected: a URL. Confirm HTTP 200 in a logged-out browser.
 
 Open the deployed URL logged out. Run the hero flow. Confirm the ledger pane never shows an amount.
 
+<!-- [CRITIQUE] The single highest-risk unverified claim in the whole submission. -->
+
+**The in-browser run has never been verified.** `npm run build` exits 0 and the bundle
+is clean (no `node:` builtins, no `require(`, 1.4MB wasm emitted), but no one has loaded
+the page and clicked the button. The Midnight runtime is an ESM-integrated WASM core
+built for Node; building it is not the same as executing it in a browser, and
+`AvalSimulator.create()` runs at mount inside a `useEffect`. If it throws, the page
+renders `loading…` forever and the two-pane demo — 15% UX, plus the Scene 4 money shot —
+is dead.
+
+Verify explicitly, before recording the video:
+
+```bash
+cd frontend && npm run build && npx vite preview --port 4173
+# open http://localhost:4173 in a real browser
+```
+
+1. Both panes render, right pane shows real JSON not `loading…`.
+2. Open devtools console. **Zero uncaught exceptions.** A WASM instantiation failure shows here first.
+3. Click "Prove funds in flight" at the default threshold. `fills` goes 0 to 1 and a nullifier appears.
+4. Raise the threshold above 2,000,000 on a fresh reload. Visible rejection with the revert string, not a silent failure.
+
+**If any of those fail:** go to DT-8 rung 2, the real-execution snapshot. Record in the
+README that the UI renders captured state and that the interactive path did not bundle.
+The snapshot preserves the no-fabricated-state invariant but it **costs the money shot**,
+so if you fall back, Scene 4 of the video must switch to a terminal recording of the
+test suite showing the indistinguishability assertion instead. Do not let the video
+claim an interactive demo that does not run.
+
 ### Phase 7 gate
 
 - [ ] Live URL returns 200 logged out
 - [ ] Hero flow completes on the deployed build
 - [ ] Rejection path visible on the deployed build
+- [ ] **Browser devtools console shows zero uncaught exceptions on load and after prove**
+- [ ] If the interactive path failed, the README says so and Scene 4 was re-cut
 
 ---
 

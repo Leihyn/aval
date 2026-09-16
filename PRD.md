@@ -38,6 +38,59 @@ Wave 1 ships one vertical end to end: **proof of funds in flight.** Alice locks 
 
 The public ledger records a Merkle root, a nullifier, and a fill count. It never records an amount.
 
+### Who learns what, stated before anyone asks
+
+<!-- [CRITIQUE E-4] The problem statement above sells "do not reveal the amount to your
+     counterparty". The shipped bilateral trust model makes the counterparty the
+     attestor, and the attestor computes the leaf from the amount. Both cannot be true
+     in one deployment. Resolving it in our own words is strictly better than a judge
+     finding it. -->
+
+In the **bilateral deployment that ships in Wave 1, Bob already knows the amount.** He
+runs the attestor; the attestor computes `leaf_hash(lock_id, amount, ...)`; you cannot
+compute that leaf without the amount. He can also recompute Alice's nullifier, so the
+proof is unlinkable to the public but not to him. Saying otherwise would be false, so
+we do not say it.
+
+What the zero-knowledge layer buys in that deployment is therefore precise, and it is
+two things, not three:
+
+1. **Privacy from the chain and from every third party.** The amount, the lock identity
+   and Alice's identity never reach public state. Deal *terms* stay off the ledger even
+   though the *settlement* is on it.
+2. **A machine-checkable gate.** Bob's node knowing something is not the same as Bob's
+   contract being able to act on it. The proof converts an off-chain observation into an
+   on-chain predicate that releases value without Bob in the loop.
+
+**Privacy from the counterparty is a roadmap property, not a Wave 1 one.** It arrives
+with the k-of-n attestor quorum, where no single attestor sees a whole lock. The
+architectural claim that makes that roadmap credible rather than aspirational:
+**`prove_funds_in_flight` does not change when the trust model changes.** The circuit
+checks membership in a tree; it never learns which attestor inserted the leaf. Moving
+from one attestor to k-of-n, to bonded attestors, to a light client is a change to
+`register_attestation` alone. The money circuit is already quorum-ready.
+
+### What an observer still learns
+
+<!-- [CRITIQUE E-4] Listing only what is hidden invites the reader to find what is not.
+     Listing the leakage ourselves is an engineering signal. -->
+
+Hiding the amount is not the same as hiding everything, and a submission that only
+publishes its wins is not being audited honestly:
+
+| Still public | Consequence |
+|---|---|
+| `fills`, and the block time of each proof | Deal count and cadence. For a treasury desk, flow volume is itself competitive information. |
+| Tree size, that is the number of registered attestations | Upper bound on outstanding commitments. |
+| `attestor` id | Which counterparty deployment this is. |
+| That *a* threshold was cleared | The predicate result, which is the point, but it is still a bit. |
+
+Two structural gaps in the same spirit, both listed in the README under what is not
+built: `register_attestor` is one-shot with no rotation or revocation, so a lost
+attestor key permanently bricks the registry; and in the bilateral model the nullifier
+set is per-deployment, so cross-counterparty reuse is prevented by the beneficiary
+binding in the leaf rather than by the nullifier.
+
 ### Why this wins
 
 | Judging criterion | Weight | How Aval scores |
@@ -52,6 +105,35 @@ The public ledger records a Merkle root, a nullifier, and a fill count. It never
 ### Competitive position
 
 Across all 59 Wave 1 submissions, **zero** address in-flight or pending settlement state. The field concentrates in credit and solvency proofs (15 entries) and identity disclosure (8 entries). Aval is the only entry in its category.
+
+#### Why this is not a solvency proof with a different label
+
+<!-- [CRITIQUE E-5] A blind peer re-derivation of this positioning, given only the
+     research brief and this PRD, returned "similar" rather than "differentiated". Its
+     argument: the CONSTRUCTION (attestor registers a Merkle leaf, holder proves a
+     private-value predicate disclosing only a boolean, nullifier prevents reuse) is
+     structurally what 23 of the 59 entries are building. Category emptiness is a
+     label claim; a judge who has just read 15 solvency circuits will recognise the
+     shape. Differentiation has to be mechanical or it is not differentiation. -->
+
+Category emptiness is not a defence. A judge who has just reviewed fifteen
+proof-of-reserves circuits will open `inflight.compact` and recognise the shape:
+commitment, membership, threshold, nullifier. The honest claim is not that the
+construction is novel. It is that **three mechanisms in it are specific to settlement
+and are absent from every solvency or identity entry, because those entries do not need
+them:**
+
+| Mechanism | In the contract | A solvency or KYC proof does not need it because |
+|---|---|---|
+| **Single use.** The nullifier is derived from the private `lock_id` and `salt`, so one lock backs exactly one proof, forever. | `nullifier_of`, `spent` set, 4 tests | A reserves claim is a reusable statement about a standing balance. Reusing it is the normal case, not an attack. |
+| **Counterparty binding.** `counterparty` is hashed into the leaf, so an attestation issued for Bob is worthless to Carol. | `leaf_hash`, 3 binding tests | A credential is a broadcast claim, deliberately presentable to anyone who asks. |
+| **Expiry on ledger block time.** `kernel.blockTimeLessThan`, not a caller-supplied timestamp. | `prove_funds_in_flight`, 2 tests | A balance proof is about now. An in-flight proof is about a window that closes. |
+
+Together those three make Aval's output a **single-use, counterparty-bound, expiring
+bearer instrument**, not a statement about a balance. That is the difference between a
+proof you *show* and a proof you *spend*, and it is the sentence that has to appear in
+the deck, the video and the README, because without it the construction reads as
+familiar.
 
 ### Thesis
 
@@ -254,6 +336,45 @@ type AvalPrivateState = { secretKey: Uint8Array; lock: LockRecord | null };
 
 **Dependencies:** `@midnight-ntwrk/compact-runtime` 0.19.0, compiled contract output.
 
+### 4.2a Indistinguishability test (the privacy proof)
+
+<!-- [CRITIQUE E-1] The existing privacy group asserts an ABSENCE. Absence in a
+     developer-authored object is not evidence. This test asserts an
+     INDISTINGUISHABILITY, which is. -->
+
+**Why this exists.** The existing test `never exposes the locked amount` asserts that
+the string `50000` does not appear in a four-field object the test itself constructs.
+That assertion could not fail, because no field in that object is ever a decimal
+amount. It proves the renderer, not the contract. The claim the product actually makes
+is stronger and is testable: **an observer cannot tell a small lock from a large one.**
+
+**The test.** Two simulators, identical in every respect except the locked amount:
+
+- Same `lock_id`, same `salt`, same `counterparty`, same `expiry`, same `required`.
+- Sim A holds `amount = 50_000`. Sim B holds `amount = 5_000_000`, one hundred times more.
+- Both prove successfully against the same threshold.
+
+**Assertions:**
+
+| Public field | Expected relation | Why |
+|---|---|---|
+| `attestor` | byte-identical | same attestor |
+| `attestor_registered` | identical | same bootstrap |
+| `fills` | identical (`1n`) | one proof each |
+| `spent` (nullifier set) | **byte-identical** | the nullifier is `H(lock_id, salt)`, which does not depend on the amount |
+| `attestations.root()` | differs | it commits to the leaf, which commits to the amount under a 256-bit secret salt |
+
+**What it proves.** Every field an observer can read and interpret is identical across a
+100x difference in the locked amount. The only field that changes is a hash whose
+preimage contains a secret salt, and it changes exactly as much for a one-unit
+difference as for a hundred-fold one. That is the privacy property, asserted rather
+than described.
+
+**Count discipline:** adding this test changes the passing count. Every "22" in
+README.md, PRD.md, ARCHITECTURE.md, FEATURE-OBSERVABLES.md, PLAN.md, the deck and the
+demo script must be updated in the same commit. A stale count is a verifiability defect
+in a submission whose entire pitch is verifiability.
+
 ### 4.3 Attestor watcher
 
 **Purpose:** bridge source-chain events to Midnight attestations.
@@ -338,9 +459,32 @@ Aval calls no external HTTP APIs in Wave 1. The source-chain leg is represented 
 
 **On screen:** split pane. Left, Bob's view: "threshold $1.5M cleared, release authorized". Right, the public ledger: a Merkle root, a nullifier, `fills: 1`. The word "amount" appears nowhere.
 
-**Voiceover:** "Alice proves the locked amount clears Bob's threshold. Watch the right pane. That is everything the chain now knows. A root, a nullifier, a counter. The amount is not there, and it never will be. Bob releases immediately. Forty-one minutes becomes zero."
+**Voiceover:** "Alice proves the locked amount clears Bob's threshold. Watch the right pane. That is everything the chain now knows. A root, a nullifier, a counter. Bob releases immediately. Forty-one minutes becomes zero."
 
-**[Do: run the live prove call, then scroll the ledger dump so the judge sees the absence.]**
+**[Do: run the live prove call.]**
+
+<!-- [CRITIQUE E-1] The original beat ended by scrolling the pane "so the judge sees the
+     absence". An absence in a developer-rendered JSON is not evidence: the pane would
+     look identical if the contract leaked the amount and the renderer omitted the key.
+     Showing the judge a missing field asks them to trust the renderer, which is exactly
+     what Thesis field 3 forbids. Replaced with a contrast the judge can actually
+     witness. -->
+
+**Then the beat that makes it proof rather than assertion:**
+
+**On screen:** the same flow runs a second time on a fresh contract. This time Alice
+holds one hundred times more. The two public-ledger panes sit side by side, and a diff
+runs between them. Every field matches: same attestor, same nullifier, same `fills: 1`.
+One line differs, the Merkle root, and it is a hash.
+
+**Voiceover:** "Now watch me do it again with a hundred times the money. Same threshold,
+same proof, and here are the two ledgers side by side. Identical. Same nullifier, same
+counter. One hash differs, and it differs exactly as much as it would for a
+one-dollar change. You are not looking at an amount we chose not to print. You are
+looking at two completely different amounts that the chain cannot tell apart."
+
+**[Do: run both, diff the two ledger states on screen. This is the money shot, not the
+single-run pane. Absence is a claim; indistinguishability is a demonstration.]**
 
 ### Scene 5, Try to cheat it (2:10-2:40)
 
@@ -350,9 +494,25 @@ Aval calls no external HTTP APIs in Wave 1. The source-chain leg is represented 
 
 ### Scene 6, Where this goes (2:40-3:00)
 
-**On screen:** the same primitive with three more predicates: identity, solvency, invoice factoring.
+<!-- [CRITIQUE E-5] The previous closing line said the primitive is "the same for proving
+     KYC passed, proving reserves cover the book". Those are the two categories intel
+     KILLED as saturated: 8 identity entries and 15 credit/solvency entries. The last
+     twenty seconds a judge hears filed Aval into both, after two minutes forty spent
+     escaping them, and it trips the project's own Thesis field 6 drift tripwires by
+     name. Replaced with trade-finance predicates that have zero competitors in the
+     field and that reinforce the product name. -->
 
-**Voiceover:** "Funds in flight is one predicate. The primitive is the same for proving KYC passed, proving reserves cover the book, proving an invoice is real. Aval is the layer that lets a counterparty act on a fact before that fact is public. Built on Midnight, because the dual ledger is the only place this is possible."
+**On screen:** the word Aval, with its definition. Then the same instrument applied to
+three more settlement moments: delivery-versus-payment, a letter of credit, invoice
+factoring.
+
+**Voiceover:** "An aval is a trade-finance term. It is a third party's guarantee that a
+payment will happen. Aval replaces the guarantor with a proof. What we built is not a
+statement about a balance, it is an instrument: single use, bound to one counterparty,
+and it expires. Funds in flight is the first settlement moment it fits. Delivery against
+payment is the next. So is a letter of credit, so is an unpaid invoice. Every one of
+them is a fact that is already true and not yet provable. Built on Midnight, because the
+dual ledger is the only place a counterparty can act on that fact without seeing it."
 
 ### Voice and copy compliance
 
